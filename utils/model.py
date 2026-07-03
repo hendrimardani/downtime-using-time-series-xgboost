@@ -37,7 +37,10 @@ def run_prediction(model, X_input):
         Or raises an exception.
     """
     y_pred_all = model.predict(X_input)
+    print(f"y_pred_all: {y_pred_all}")
+    print(f"y_pred_all shape: {y_pred_all.shape}")
     n_rows = X_input.shape[0]
+
     results = []
     for i in range(n_rows):
         if y_pred_all.ndim == 1:

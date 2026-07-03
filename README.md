@@ -9,12 +9,18 @@ Proyek ini adalah sebuah *dashboard* interaktif berbasis web (menggunakan Stream
 - **Ekspor Data**: Menyediakan fitur untuk mengunduh hasil prediksi 24-step dalam bentuk CSV.
 
 ## Input (Masukan)
-Aplikasi menerima input berupa file **CSV** dengan kolom-kolom *lag features* (historis) sebagai berikut:
-- `temperature_lag1`, `temperature_lag24`
-- `vibration_lag1`, `vibration_lag24`
-- `pressure_bar_lag1`, `pressure_bar_lag24`
+Aplikasi menerima input berupa file **CSV** dengan kolom-kolom *lag features* (data historis) yang mendeskripsikan kondisi sensor pada jam-jam sebelumnya. Berikut adalah penjelasan untuk setiap kolom yang dibutuhkan:
 
-*Catatan: Aplikasi memiliki fitur auto-detect yang dapat menyesuaikan penamaan kolom yang bervariasi (misal: `suhu_lag1`, `temp_lag_1`, `tekanan_lag24`, dll) agar sesuai format standar.*
+| Nama Kolom | Satuan | Deskripsi |
+| :--- | :---: | :--- |
+| `temperature_lag1` | °C | Suhu mesin pada 1 jam (1 step) sebelum waktu saat ini. |
+| `temperature_lag24` | °C | Suhu mesin pada 24 jam (24 step) sebelum waktu saat ini. |
+| `vibration_lag1` | mm/s | Tingkat getaran mesin pada 1 jam (1 step) sebelum waktu saat ini. |
+| `vibration_lag24` | mm/s | Tingkat getaran mesin pada 24 jam (24 step) sebelum waktu saat ini. |
+| `pressure_bar_lag1` | bar | Tekanan operasional mesin pada 1 jam (1 step) sebelum waktu saat ini. |
+| `pressure_bar_lag24`| bar | Tekanan operasional mesin pada 24 jam (24 step) sebelum waktu saat ini. |
+
+*Catatan: Aplikasi memiliki fitur auto-detect yang dapat menyesuaikan penamaan kolom yang bervariasi (misal: `suhu_lag1`, `temp_lag_1`, `tekanan_lag24`, dll) agar otomatis sesuai format standar.*
 
 ## Output (Keluaran)
 - **Ringkasan Keseluruhan**: Menampilkan persentase jumlah data yang masuk ke kategori aman, waspada, atau bahaya.
