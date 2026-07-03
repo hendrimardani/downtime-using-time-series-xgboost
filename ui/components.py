@@ -299,22 +299,22 @@ def render_input_summary(input_data):
     Parameters
     ----------
     input_data : dict
-        Keys: temperature_lag1, temperature_lag24, vibration_lag1,
-              vibration_lag24, pressure_bar_lag1, pressure_bar_lag24.
+        Keys: temperature_C_lag_1, temperature_C_lag_24, vibration_mm_s_lag_1,
+              vibration_mm_s_lag_24, pressure_bar_lag_1, pressure_bar_lag_24.
     """
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        render_kpi_card("Temperature Lag-1", f"{input_data['temperature_lag1']:.2f}", unit="°C", icon="🌡️")
-        render_kpi_card("Temperature Lag-24", f"{input_data['temperature_lag24']:.2f}", unit="°C", icon="🌡️")
+        render_kpi_card("Temperature Lag-1", f"{input_data['temperature_C_lag_1']:.2f}", unit="°C", icon="🌡️")
+        render_kpi_card("Temperature Lag-24", f"{input_data['temperature_C_lag_24']:.2f}", unit="°C", icon="🌡️")
 
     with col2:
-        render_kpi_card("Vibration Lag-1", f"{input_data['vibration_lag1']:.2f}", unit="mm/s", icon="📳")
-        render_kpi_card("Vibration Lag-24", f"{input_data['vibration_lag24']:.2f}", unit="mm/s", icon="📳")
+        render_kpi_card("Vibration Lag-1", f"{input_data['vibration_mm_s_lag_1']:.2f}", unit="mm/s", icon="📳")
+        render_kpi_card("Vibration Lag-24", f"{input_data['vibration_mm_s_lag_24']:.2f}", unit="mm/s", icon="📳")
 
     with col3:
-        render_kpi_card("Pressure Lag-1", f"{input_data['pressure_bar_lag1']:.2f}", unit="bar", icon="🔧")
-        render_kpi_card("Pressure Lag-24", f"{input_data['pressure_bar_lag24']:.2f}", unit="bar", icon="🔧")
+        render_kpi_card("Pressure Lag-1", f"{input_data['pressure_bar_lag_1']:.2f}", unit="bar", icon="🔧")
+        render_kpi_card("Pressure Lag-24", f"{input_data['pressure_bar_lag_24']:.2f}", unit="bar", icon="🔧")
 
 
 # ---------------------------------------------------------------------------

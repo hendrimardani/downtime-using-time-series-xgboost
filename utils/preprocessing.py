@@ -28,7 +28,7 @@ def preprocessing_data(df):
     'vibration_mm_s_mean': 'vibration_mm_s',
     'pressure_bar_mean': 'pressure_bar'
     }, axis=1, inplace=True)
-    
+
     df["temperature_C_lag_1"] = df["temperature_C"].shift(1)
     df["temperature_C_lag_24"] = df["temperature_C"].shift(24)
     df["vibration_mm_s_lag_1"] = df["vibration_mm_s"].shift(1)
@@ -37,7 +37,23 @@ def preprocessing_data(df):
     df["pressure_bar_lag_24"] = df["pressure_bar"].shift(24)
     df = df.dropna()
     
-    return df
+    df.reset_index(inplace=True)
+    df["day_of_week"] = df["timestamp"].dt.dayofweek
+    df["is_holiday"] = df["timestamp"].dt.dayofweek >= 5
+    df["is_holiday"] = df["is_holiday"].map(lambda x: 1 if x else 0)
+
+    last_row = df.tail(1)
+    year = last_row['timestamp'].dt.year.iloc[0]
+    month = last_row['timestamp'].dt.month.iloc[0]
+    day = last_row['timestamp'].dt.day.iloc[0]
+    hour = last_row['timestamp'].dt.hour.iloc[0]
+    minute = last_row['timestamp'].dt.minute.iloc[0]
+    last_row.set_index('timestamp', inplace=True)
+
+    features = [feature for feature in last_row.columns if feature.endswith('lag_1') or feature.endswith('lag_24') or feature in ['day_of_week', 'is_holiday']]
+    last_row = last_row[features]
+
+    return last_row.to_csv(f'../{year}_{month}_{day}_{hour}_{minute:02d}_00_preprocessed_data.csv', index=False)
 
 if __name__ == "__main__":
     print(preprocessing_data(PATH_CSV))

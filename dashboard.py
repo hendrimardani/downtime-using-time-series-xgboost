@@ -152,15 +152,15 @@ if uploaded_file is not None:
         st.error(f"❌ Gagal membaca file CSV: {e}")
         st.stop()
 
-    df_mapped = auto_detect_columns(df_input)
-    if df_mapped is None:
-        st.error("❌ Kolom CSV tidak sesuai format yang diharapkan.")
-        st.markdown("**Kolom ditemukan:** `" + "`, `".join(df_input.columns.tolist()) + "`")
-        st.markdown("**Kolom diharapkan:** `" + "`, `".join(EXPECTED_COLUMNS) + "`")
-        st.info("Silakan sesuaikan nama kolom atau download template dari sidebar.")
-        st.stop()
+    # df_mapped = auto_detect_columns(df_input)
+    # if df_mapped is None:
+    #     st.error("❌ Kolom CSV tidak sesuai format yang diharapkan.")
+    #     st.markdown("**Kolom ditemukan:** `" + "`, `".join(df_input.columns.tolist()) + "`")
+    #     st.markdown("**Kolom diharapkan:** `" + "`, `".join(EXPECTED_COLUMNS) + "`")
+    #     st.info("Silakan sesuaikan nama kolom atau download template dari sidebar.")
+    #     st.stop()
 
-    df_clean, warn_msg = validate_csv(df_mapped)
+    df_clean, warn_msg = validate_csv(df_input)
     if warn_msg:
         st.warning(f"⚠️ {warn_msg}")
 
@@ -176,7 +176,7 @@ if uploaded_file is not None:
 
     render_kpi_row([
         {"icon": "📄", "label": "Total Baris", "value": str(n_rows), "unit": "data input valid"},
-        {"icon": "🔢", "label": "Total Kolom", "value": str(len(EXPECTED_COLUMNS)), "unit": "fitur lag terdeteksi"},
+        # {"icon": "🔢", "label": "Total Kolom", "value": str(len(EXPECTED_COLUMNS)), "unit": "fitur lag terdeteksi"},
         {"icon": "📊", "label": "Total Prediksi", "value": str(n_rows * 24 * 3), "unit": f"{n_rows} × 24 step × 3 fitur"},
     ])
 

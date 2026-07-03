@@ -1,9 +1,10 @@
 import pandas as pd
 
 EXPECTED_COLUMNS = [
-    "temperature_lag1", "temperature_lag24",
-    "vibration_lag1", "vibration_lag24",
-    "pressure_bar_lag1", "pressure_bar_lag24",
+    "temperature_C_lag_1", "temperature_C_lag_24",
+    "vibration_mm_s_lag_1", "vibration_mm_s_lag_24",
+    "pressure_bar_lag_1", "pressure_bar_lag_24",
+    "day_of_week", "is_holiday"
 ]
 
 def auto_detect_columns(df):
@@ -35,13 +36,13 @@ def validate_csv(df):
     """Validate CSV data, remove NaN rows.
     Returns (df_clean, warning_message_or_None).
     """
-    df_features = df[EXPECTED_COLUMNS]
+    # df_features = df[EXPECTED_COLUMNS]
     warning = None
-    if df_features.isnull().any().any():
-        null_counts = df_features.isnull().sum()
+    if df.isnull().any().any():
+        null_counts = df.isnull().sum()
         null_cols = null_counts[null_counts > 0]
         warning = f"Terdapat {null_cols.sum()} nilai kosong (NaN) di kolom: {', '.join(null_cols.index.tolist())}. Baris dengan NaN akan dilewati."
-        valid_mask = ~df_features.isnull().any(axis=1)
+        valid_mask = ~df.isnull().any(axis=1)
         df = df[valid_mask].reset_index(drop=True)
     return df, warning
 
