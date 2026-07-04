@@ -1,6 +1,6 @@
 import streamlit as st
 import joblib
-import numpy as np
+import pandas as pd
 import os
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "xgboost_chain_model_24h.joblib")
@@ -10,56 +10,54 @@ def load_model():
     """Memuat model RegressorChain dari file joblib."""
     return joblib.load(MODEL_PATH)
 
-def parse_prediction(y_pred_row):
-    """Parse output prediksi satu baris menjadi 3 array (temp, vib, pres).
-    Returns (temp_pred, vib_pred, pres_pred) or (None, None, None) on failure.
-    """
-    y_flat = y_pred_row.flatten()
-    n_steps = 24
-    n_features = 3
-    if len(y_flat) == n_steps * n_features:
-        return y_flat[0:24], y_flat[24:48], y_flat[48:72]
-    else:
-        try:
-            reshaped = y_flat.reshape(n_steps, n_features)
-            return reshaped[:, 0], reshaped[:, 1], reshaped[:, 2]
-        except Exception:
-            return None, None, None
+def future_pred_clean_df(last_time, future_pred_df, horizon):
+    future_clean = {
+        'temperature_pred': [],
+        'vibration_pred': [],
+        'pressure_bar_pred': []
+    }
 
-def run_prediction(model, X_input):
+    for i in range(future_pred_df.shape[0]):
+        if i % 3 == 0:
+            future_clean['temperature_pred'].append(float(future_pred_df.iloc[i].values[0]))
+        elif i % 3 == 1:
+            future_clean['vibration_pred'].append(float(future_pred_df.iloc[i].values[0]))
+        else:
+            future_clean['pressure_bar_pred'].append(float(future_pred_df.iloc[i].values[0]))
+
+    time_future = pd.date_range(start=last_time + pd.Timedelta(hours=1), periods=horizon, freq='1H')
+    future_clean_df = pd.DataFrame(future_clean, index=time_future)
+
+    temp_pred = future_clean_df['temperature_pred'].values
+    vib_pred = future_clean_df['vibration_pred'].values
+    pres_pred = future_clean_df['pressure_bar_pred'].values
+    return temp_pred, vib_pred, pres_pred
+
+def run_prediction(model, last_time, X_input, TARGETS, horizon):
     """Run batch prediction and parse results.
     Args:
         model: loaded sklearn model
         X_input: numpy array of shape (n_rows, 6)
+        HORIZON: number of time steps to predict
     Returns:
         list of dicts with keys: idx, temp_pred, vib_pred, pres_pred,
         avg_temp, avg_vib, avg_pres, max_temp, max_vib, max_pres, input
         Or raises an exception.
     """
-    y_pred_all = model.predict(X_input)
-    print(f"y_pred_all: {y_pred_all}")
-    print(f"y_pred_all shape: {y_pred_all.shape}")
-    n_rows = X_input.shape[0]
-
+    y_pred = model.predict(X_input).flatten()
+    y_pred_df = pd.DataFrame(y_pred, index=TARGETS)
+    temp_pred, vib_pred, pres_pred = future_pred_clean_df(last_time, y_pred_df, horizon)
+    
     results = []
-    for i in range(n_rows):
-        if y_pred_all.ndim == 1:
-            pred_row = y_pred_all
-        else:
-            pred_row = y_pred_all[i]
-        temp_pred, vib_pred, pres_pred = parse_prediction(pred_row)
-        if temp_pred is None:
-            raise ValueError(f"Format output model tidak sesuai pada baris {i + 1}. Diterima {len(pred_row.flatten())} kolom, ekspektasi 72.")
-        results.append({
-            "idx": i,
-            "temp_pred": temp_pred,
-            "vib_pred": vib_pred,
-            "pres_pred": pres_pred,
-            "avg_temp": float(temp_pred.mean()),
-            "avg_vib": float(vib_pred.mean()),
-            "avg_pres": float(pres_pred.mean()),
-            "max_temp": float(temp_pred.max()),
-            "max_vib": float(vib_pred.max()),
-            "max_pres": float(pres_pred.max()),
-        })
+    results.append({
+        "temp_pred": temp_pred,
+        "vib_pred": vib_pred,
+        "pres_pred": pres_pred,
+        "avg_temp": float(temp_pred.mean()),
+        "avg_vib": float(vib_pred.mean()),
+        "avg_pres": float(pres_pred.mean()),
+        "max_temp": float(temp_pred.max()),
+        "max_vib": float(vib_pred.max()),
+        "max_pres": float(pres_pred.max()),
+    })
     return results

@@ -1,11 +1,17 @@
 import pandas as pd
 
-EXPECTED_COLUMNS = [
+FEATURES = [
     "temperature_C_lag_1", "temperature_C_lag_24",
     "vibration_mm_s_lag_1", "vibration_mm_s_lag_24",
     "pressure_bar_lag_1", "pressure_bar_lag_24",
     "day_of_week", "is_holiday"
 ]
+
+HORIZON = 24
+COLUMNS_TARGETS = ["temperature_C_t", "vibration_mm_s_t", "pressure_bar_t"]
+# Format temperature_C_t_1, vibration_mm_s_t_1, pressure_bar_t_1, temperature_C_t_2, vibration_mm_s_t_2, pressure_bar_t_2, ..., temperature_C_t_24, vibration_mm_s_t_24, pressure_bar_t_24
+TARGETS = [f"{feature}_{i}" for i in range(1, HORIZON + 1) for feature in COLUMNS_TARGETS]
+
 
 def auto_detect_columns(df):
     """Auto-detect and rename CSV columns to standard format.
@@ -77,7 +83,7 @@ def create_export_dataframe(all_results):
     for r in all_results:
         for s in range(24):
             rows.append({
-                "data_ke": r["idx"] + 1,
+                # "data_ke": r["idx"] + 1,
                 "step": s + 1,
                 "temperature": r["temp_pred"][s],
                 "vibration": r["vib_pred"][s],
@@ -91,7 +97,6 @@ def create_summary_dataframe(all_results):
     rows = []
     for r in all_results:
         rows.append({
-            "Data ke-": r["idx"] + 1,
             "Avg Temp (°C)": round(r["avg_temp"], 4),
             "Max Temp (°C)": round(r["max_temp"], 4),
             "Avg Vib (mm/s)": round(r["avg_vib"], 6),
@@ -101,4 +106,4 @@ def create_summary_dataframe(all_results):
             "Status Risiko": risk_emoji.get(r["risk_status"], "?"),
         })
     import pandas as pd
-    return pd.DataFrame(rows).set_index("Data ke-")
+    return pd.DataFrame(rows).reset_index().rename(columns={"index": "Data ke-"}).set_index("Data ke-")

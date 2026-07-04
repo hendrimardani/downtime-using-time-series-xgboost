@@ -179,12 +179,14 @@ def render_welcome_page():
                         </tr>
                     </thead>
                     <tbody style="color:#BDBDBD;">
-                        <tr><td style="padding:6px 8px;">1</td><td style="padding:6px 8px;">temperature_lag1</td></tr>
-                        <tr><td style="padding:6px 8px;">2</td><td style="padding:6px 8px;">temperature_lag24</td></tr>
-                        <tr><td style="padding:6px 8px;">3</td><td style="padding:6px 8px;">vibration_lag1</td></tr>
-                        <tr><td style="padding:6px 8px;">4</td><td style="padding:6px 8px;">vibration_lag24</td></tr>
-                        <tr><td style="padding:6px 8px;">5</td><td style="padding:6px 8px;">pressure_bar_lag1</td></tr>
-                        <tr><td style="padding:6px 8px;">6</td><td style="padding:6px 8px;">pressure_bar_lag24</td></tr>
+                        <tr><td style="padding:6px 8px;">1</td><td style="padding:6px 8px;">temperature_C_lag_1</td></tr>
+                        <tr><td style="padding:6px 8px;">2</td><td style="padding:6px 8px;">temperature_C_lag_24</td></tr>
+                        <tr><td style="padding:6px 8px;">3</td><td style="padding:6px 8px;">vibration_mm_s_lag_1</td></tr>
+                        <tr><td style="padding:6px 8px;">4</td><td style="padding:6px 8px;">vibration_mm_s_lag_24</td></tr>
+                        <tr><td style="padding:6px 8px;">5</td><td style="padding:6px 8px;">pressure_bar_lag_1</td></tr>
+                        <tr><td style="padding:6px 8px;">6</td><td style="padding:6px 8px;">pressure_bar_lag_24</td></tr>
+                        <tr><td style="padding:6px 8px;">7</td><td style="padding:6px 8px;">day_of_week</td></tr>
+                        <tr><td style="padding:6px 8px;">8</td><td style="padding:6px 8px;">is_holiday</td></tr>
                     </tbody>
                 </table>
             </div>

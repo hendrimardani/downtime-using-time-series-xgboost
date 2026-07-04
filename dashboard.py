@@ -26,7 +26,9 @@ from utils import (
     auto_detect_columns,
     validate_csv,
     get_risk_status,
-    EXPECTED_COLUMNS,
+    FEATURES,
+    TARGETS,
+    HORIZON,
 )
 from utils.data import compute_risk_for_results, create_export_dataframe, create_summary_dataframe
 
@@ -98,23 +100,27 @@ with st.sidebar:
 
         | Kolom | Keterangan |
         |-------|------------|
-        | `temperature_lag1` | Suhu lag-1 |
-        | `temperature_lag24` | Suhu lag-24 |
-        | `vibration_lag1` | Getaran lag-1 |
-        | `vibration_lag24` | Getaran lag-24 |
-        | `pressure_bar_lag1` | Tekanan lag-1 |
-        | `pressure_bar_lag24` | Tekanan lag-24 |
-
+        | `temperature_C_lag_1` | Suhu lag-1 |
+        | `temperature_C_lag_24` | Suhu lag-24 |
+        | `vibration_mm_s_lag_1` | Getaran lag-1 |
+        | `vibration_mm_s_lag_24` | Getaran lag-24 |
+        | `pressure_bar_lag_1` | Tekanan lag-1 |
+        | `pressure_bar_lag_24` | Tekanan lag-24 |
+        | `day_of_week` | Hari dalam minggu (0=Senin, 6=Minggu) |
+        | `is_holiday` | 1 jika hari libur, 0 jika hari kerja |
+                    
         Setiap **baris** = satu input prediksi.
         """)
 
         template_df = pd.DataFrame({
-            "temperature_lag1": [25.0],
-            "temperature_lag24": [24.5],
-            "vibration_lag1": [0.0040],
-            "vibration_lag24": [0.0038],
-            "pressure_bar_lag1": [2.0],
-            "pressure_bar_lag24": [1.8],
+            "temperature_C_lag_1": [25.0],
+            "temperature_C_lag_24": [24.5],
+            "vibration_mm_s_lag_1": [0.0040],
+            "vibration_mm_s_lag_24": [0.0038],
+            "pressure_bar_lag_1": [2.0],
+            "pressure_bar_lag_24": [1.8],
+            "day_of_week": [0],
+            "is_holiday": [0],
         })
         st.download_button(
             label="📥 Download Template CSV",
@@ -148,6 +154,10 @@ if uploaded_file is not None:
     # ── Baca & Validasi CSV ───────────────────────────────────────
     try:
         df_input = pd.read_csv(uploaded_file)
+        filename = uploaded_file.name
+        datetime_format = filename.split("_")[:5]
+        date_string = "_".join(datetime_format)
+        last_time = pd.to_datetime(date_string, format="%Y_%m_%d_%H_%M")
     except Exception as e:
         st.error(f"❌ Gagal membaca file CSV: {e}")
         st.stop()
@@ -160,12 +170,12 @@ if uploaded_file is not None:
     #     st.info("Silakan sesuaikan nama kolom atau download template dari sidebar.")
     #     st.stop()
 
-    df_clean, warn_msg = validate_csv(df_input)
-    if warn_msg:
-        st.warning(f"⚠️ {warn_msg}")
+    # df_clean, warn_msg = validate_csv(df_input)
+    # if warn_msg:
+    #     st.warning(f"⚠️ {warn_msg}")
 
-    df_features = df_clean[EXPECTED_COLUMNS]
-    n_rows = len(df_features)
+    df_features = df_input[FEATURES]
+    n_rows = len(df_input)
 
     if n_rows == 0:
         st.error("❌ Tidak ada data valid untuk diprediksi setelah membersihkan NaN.")
@@ -188,7 +198,7 @@ if uploaded_file is not None:
     # ── Jalankan Prediksi ─────────────────────────────────────────
     with st.spinner(f"🔄 Menjalankan prediksi untuk {n_rows} data..."):
         try:
-            all_results = run_prediction(model, df_features.values)
+            all_results = run_prediction(model, last_time, df_features.values, TARGETS, HORIZON)
         except Exception as e:
             st.error(f"❌ Error saat prediksi: {e}")
             st.stop()
@@ -265,6 +275,7 @@ if uploaded_file is not None:
 
     # ── Tabel Ringkasan ───────────────────────────────────────────
     render_section_header("📋 Tabel Ringkasan Semua Data")
+    print(f"all_results: {all_results}")
     df_summary = create_summary_dataframe(all_results)
     st.dataframe(df_summary, use_container_width=True, height=400)
 
@@ -273,7 +284,7 @@ if uploaded_file is not None:
     # ══════════════════════════════════════════════════════════════
     # DETAIL PER DATA — Tabs
     # ══════════════════════════════════════════════════════════════
-    render_section_header("🔍 Detail Prediksi per Data")
+    render_section_header("🔍 Detail Prediksi")
 
     if n_rows > 1:
         selected_row = st.slider(
