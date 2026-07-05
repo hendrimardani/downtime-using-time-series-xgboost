@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
@@ -259,17 +260,46 @@ if not model_loaded:
     st.stop()
 
 
-if uploaded_file is not None:
-    try:
-        df_input = pd.read_csv(uploaded_file)
-        df_input["timestamp"] = pd.to_datetime(df_input["timestamp"], format="mixed")
-        last_time = df_input["timestamp"].iloc[0]
-        # last_time = pd.to_datetime(date_string, format="mixed")
-        print("last_time", last_time)
-    except Exception as e:
-        st.error(f"❌ Gagal membaca file CSV: {e}")
-        st.stop()
+data_available = False
 
+if uploaded_file is not None:
+    file_bytes = uploaded_file.getvalue()
+    if st.session_state.get("last_uploaded_file") != file_bytes:
+        st.session_state["last_uploaded_file"] = file_bytes
+        try:
+            with open("preprocessed_dataset.csv", "wb") as f:
+                f.write(file_bytes)
+        except Exception as e:
+            st.error(f"Gagal menyimpan file upload: {e}")
+
+    if os.path.exists("preprocessed_dataset.csv"):
+        try:
+            df_input = pd.read_csv("preprocessed_dataset.csv")
+            df_input["timestamp"] = pd.to_datetime(df_input["timestamp"], format="mixed")
+            last_time = df_input["timestamp"].iloc[0]
+            data_available = True
+        except Exception as e:
+            st.error(f"❌ Gagal membaca file preprocessed_dataset.csv: {e}")
+            st.stop()
+    else:
+        try:
+            df_input = pd.read_csv(uploaded_file)
+            df_input["timestamp"] = pd.to_datetime(df_input["timestamp"], format="mixed")
+            last_time = df_input["timestamp"].iloc[0]
+            data_available = True
+        except Exception as e:
+            st.error(f"❌ Gagal membaca file CSV: {e}")
+            st.stop()
+else:
+    if "last_uploaded_file" in st.session_state:
+        del st.session_state["last_uploaded_file"]
+    if os.path.exists("preprocessed_dataset.csv"):
+        try:
+            os.remove("preprocessed_dataset.csv")
+        except:
+            pass
+
+if data_available:
     df_features = df_input[FEATURES]
     n_rows = len(df_input)
 
@@ -282,15 +312,6 @@ if uploaded_file is not None:
     ])
 
     with st.expander("👁️ Lihat Data Input", expanded=False):
-        # df_datetime = df_features.copy()
-        # df_datetime["timestamp"] = last_time
-        # new_sort_features = [
-        #     "timestamp", "temperature_C_lag_1", "temperature_C_lag_24",
-        #     "vibration_mm_s_lag_1", "vibration_mm_s_lag_24",
-        #     "pressure_bar_lag_1", "pressure_bar_lag_24",
-        #     "day_of_week", "is_holiday"
-        # ]
-        # df_datetime = df_datetime[new_sort_features]
         st.dataframe(df_input, use_container_width=True, height=300)
 
     st.markdown("---")

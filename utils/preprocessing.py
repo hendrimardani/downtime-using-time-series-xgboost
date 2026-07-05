@@ -28,9 +28,9 @@ def preprocessing_data(df):
     df.drop(['machine_id', 'shift', 'operating_hours', 'status', 'ambient_temp_C', 'production_count', 'defect_count', 'good_count'], axis=1, inplace=True)
 
     agg_rules = {
-    'temperature_C': ['mean', 'max', 'min', 'std'],
-    'vibration_mm_s': ['mean', 'max', 'min', 'std'],
-    'pressure_bar': ['mean', 'max', 'min', 'std']
+        'temperature_C': ['mean', 'max', 'min', 'std'],
+        'vibration_mm_s': ['mean', 'max', 'min', 'std'],
+        'pressure_bar': ['mean', 'max', 'min', 'std']
     }
     df = df.resample('1H').agg(agg_rules)
 
@@ -55,13 +55,11 @@ def preprocessing_data(df):
     df["pressure_bar_lag_24"] = df["pressure_bar"].shift(24)
     df = df.dropna()
     
-    df.reset_index(inplace=True)
+    df.reset_index("timestamp", inplace=True)
     df["day_of_week"] = df["timestamp"].dt.dayofweek
     df["is_holiday"] = df["timestamp"].dt.dayofweek >= 5
     df["is_holiday"] = df["is_holiday"].map(lambda x: 1 if x else 0)
-
-    last_row = df.tail(1)
-    # last_row.set_index('timestamp', inplace=True)
+    last_row = df.iloc[-1, :].to_frame().T
 
     features = [
         feature
@@ -70,7 +68,6 @@ def preprocessing_data(df):
                     or feature in ['timestamp', 'day_of_week', 'is_holiday']
         ]
     last_row = last_row[features]
-
     return last_row.to_csv(f'../preprocessed_dataset.csv', index=False)
 
 def status_downtime(row):
