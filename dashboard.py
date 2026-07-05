@@ -1,4 +1,6 @@
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
+from datetime import datetime
 import pandas as pd
 from utils.data import create_export_dataframe
 from ui import (
@@ -48,6 +50,160 @@ except Exception as e:
 
 
 with st.sidebar:
+    # ── Auto Refresh ──────────────────────────────────────────────
+    st.markdown("## 🔄 Auto Refresh")
+
+    refresh_options = {
+        "Nonaktif": None,
+        "⏱️ Setiap 1 Menit": 60 * 1000,
+        "🕐 Setiap 1 Jam": 60 * 60 * 1000,
+        "📅 Setiap 1 Hari": 24 * 60 * 60 * 1000,
+    }
+
+    selected_refresh = st.selectbox(
+        "Interval Refresh",
+        options=list(refresh_options.keys()),
+        index=0,
+        help="Pilih interval auto refresh halaman dashboard",
+    )
+
+    refresh_interval_ms = refresh_options[selected_refresh]
+
+    if refresh_interval_ms is not None:
+        refresh_count = st_autorefresh(
+            interval=refresh_interval_ms,
+            key="auto_refresh_counter",
+        )
+
+        refresh_interval_sec = refresh_interval_ms // 1000
+        last_refresh_time = datetime.now().strftime('%H:%M:%S')
+
+        import streamlit.components.v1 as components
+
+        countdown_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                background: transparent;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }}
+            .countdown-container {{
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.10);
+                border-radius: 12px;
+                padding: 1rem;
+            }}
+            .countdown-header {{
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+            }}
+            .countdown-header .icon {{ font-size: 1.3rem; }}
+            .countdown-header .label {{
+                color: #E0E0E0;
+                font-weight: 600;
+                font-size: 0.95rem;
+            }}
+            .countdown-time {{
+                font-size: 1.8rem;
+                font-weight: 700;
+                text-align: center;
+                padding: 0.3rem 0;
+                font-family: 'Courier New', monospace;
+                background: linear-gradient(135deg, #60a5fa, #a78bfa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }}
+            .progress-track {{
+                background: rgba(255,255,255,0.08);
+                border-radius: 8px;
+                height: 8px;
+                margin: 8px 0;
+                overflow: hidden;
+            }}
+            .progress-fill {{
+                height: 100%;
+                border-radius: 8px;
+                background: linear-gradient(90deg, #60a5fa, #a78bfa);
+                width: 100%;
+                transition: width 1s linear;
+            }}
+            .countdown-footer {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 6px;
+            }}
+            .countdown-footer span {{
+                color: #9E9E9E;
+                font-size: 0.78rem;
+            }}
+            .countdown-footer strong {{ color: #BDBDBD; }}
+            .countdown-footer code {{
+                color: #BDBDBD;
+                background: none;
+                font-family: 'Courier New', monospace;
+            }}
+        </style>
+        </head>
+        <body>
+            <div class="countdown-container">
+                <div class="countdown-header">
+                    <span class="icon">⏳</span>
+                    <span class="label">Refresh berikutnya dalam</span>
+                </div>
+                <div class="countdown-time" id="countdown-time">00:00:00</div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="countdown-bar"></div>
+                </div>
+                <div class="countdown-footer">
+                    <span>🔁 Refresh ke-<strong>{refresh_count}</strong></span>
+                    <span>🕑 <code>{last_refresh_time}</code></span>
+                </div>
+            </div>
+
+            <script>
+            (function() {{
+                const totalSeconds = {refresh_interval_sec};
+                const startTime = Date.now();
+
+                function pad(n) {{ return String(n).padStart(2, '0'); }}
+
+                function update() {{
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    let remaining = totalSeconds - elapsed;
+                    if (remaining < 0) remaining = 0;
+
+                    const h = Math.floor(remaining / 3600);
+                    const m = Math.floor((remaining % 3600) / 60);
+                    const s = remaining % 60;
+
+                    document.getElementById('countdown-time').textContent =
+                        pad(h) + ':' + pad(m) + ':' + pad(s);
+                    document.getElementById('countdown-bar').style.width =
+                        ((remaining / totalSeconds) * 100) + '%';
+
+                    if (remaining > 0) {{
+                        setTimeout(update, 1000);
+                    }}
+                }}
+                update();
+            }})();
+            </script>
+        </body>
+        </html>
+        """
+        components.html(countdown_html, height=150)
+    else:
+        st.info("💤 Auto refresh **nonaktif**")
+
+    st.markdown("---")
+
+    # ── Upload Data ──────────────────────────────────────────────
     st.markdown("## 📂 Upload Data CSV")
     st.markdown(
         "Upload file CSV berisi data lag fitur mesin. "
@@ -106,10 +262,10 @@ if not model_loaded:
 if uploaded_file is not None:
     try:
         df_input = pd.read_csv(uploaded_file)
-        filename = uploaded_file.name
-        datetime_format = filename.split("_")[:5]
-        date_string = "_".join(datetime_format)
-        last_time = pd.to_datetime(date_string, format="%Y_%m_%d_%H_%M")
+        df_input["timestamp"] = pd.to_datetime(df_input["timestamp"], format="mixed")
+        last_time = df_input["timestamp"].iloc[0]
+        # last_time = pd.to_datetime(date_string, format="mixed")
+        print("last_time", last_time)
     except Exception as e:
         st.error(f"❌ Gagal membaca file CSV: {e}")
         st.stop()
@@ -126,16 +282,16 @@ if uploaded_file is not None:
     ])
 
     with st.expander("👁️ Lihat Data Input", expanded=False):
-        df_datetime = df_features.copy()
-        df_datetime["timestamp"] = last_time
-        new_sort_features = [
-            "timestamp", "temperature_C_lag_1", "temperature_C_lag_24",
-            "vibration_mm_s_lag_1", "vibration_mm_s_lag_24",
-            "pressure_bar_lag_1", "pressure_bar_lag_24",
-            "day_of_week", "is_holiday"
-        ]
-        df_datetime = df_datetime[new_sort_features]
-        st.dataframe(df_datetime, use_container_width=True, height=300)
+        # df_datetime = df_features.copy()
+        # df_datetime["timestamp"] = last_time
+        # new_sort_features = [
+        #     "timestamp", "temperature_C_lag_1", "temperature_C_lag_24",
+        #     "vibration_mm_s_lag_1", "vibration_mm_s_lag_24",
+        #     "pressure_bar_lag_1", "pressure_bar_lag_24",
+        #     "day_of_week", "is_holiday"
+        # ]
+        # df_datetime = df_datetime[new_sort_features]
+        st.dataframe(df_input, use_container_width=True, height=300)
 
     st.markdown("---")
 

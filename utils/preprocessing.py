@@ -1,6 +1,6 @@
 import pandas as pd
 
-PATH_CSV = '../raw_dataset.csv'
+PATH_CSV ='../raw_dataset.csv'
 
 # Normal
 LOWER_TEMP_NORMAL = 70.630000
@@ -61,17 +61,17 @@ def preprocessing_data(df):
     df["is_holiday"] = df["is_holiday"].map(lambda x: 1 if x else 0)
 
     last_row = df.tail(1)
-    year = last_row['timestamp'].dt.year.iloc[0]
-    month = last_row['timestamp'].dt.month.iloc[0]
-    day = last_row['timestamp'].dt.day.iloc[0]
-    hour = last_row['timestamp'].dt.hour.iloc[0]
-    minute = last_row['timestamp'].dt.minute.iloc[0]
-    last_row.set_index('timestamp', inplace=True)
+    # last_row.set_index('timestamp', inplace=True)
 
-    features = [feature for feature in last_row.columns if feature.endswith('lag_1') or feature.endswith('lag_24') or feature in ['day_of_week', 'is_holiday']]
+    features = [
+        feature
+            for feature in last_row.columns
+                if feature.endswith('lag_1') or feature.endswith('lag_24') 
+                    or feature in ['timestamp', 'day_of_week', 'is_holiday']
+        ]
     last_row = last_row[features]
 
-    return last_row.to_csv(f'../{year}_{month}_{day}_{hour}_{minute:02d}_00_preprocessed_data.csv', index=False)
+    return last_row.to_csv(f'../preprocessed_dataset.csv', index=False)
 
 def status_downtime(row):
     is_threshold_temp_normal = LOWER_TEMP_NORMAL <= row['temperature_C_pred'] <= UPPER_TEMP_NORMAL
