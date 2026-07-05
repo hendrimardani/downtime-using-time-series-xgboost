@@ -142,6 +142,10 @@ def render_welcome_page():
                 <tbody style="color:#BDBDBD;">
                     <tr><td style="padding:6px 8px;">Auto Refresh</td><td style="padding:6px 8px;">Auto refresh secara realtime (1 menit, 1 jam, dan 1 hari) disesuaikan sesuai kebutuhan.</td></tr>
                     <tr><td style="padding:6px 8px;">Export Hasil Prediksi</td><td style="padding:6px 8px;">Ekspor hasil prediksi ke berbagai format seperti CSV dan JSON untuk analisis lebih lanjut.</td></tr>
+                    <tr><td style="padding:6px 8px;">Deteksi Status Risiko Downtime</td><td style="padding:6px 8px;">Mengklasifikasikan tiap prediksi ke dalam status 🟢 Aman, 🟡 Waspada, atau 🔴 Bahaya secara otomatis (early sistem warning)</td></tr>
+                    <tr><td style="padding:6px 8px;">Tabel Prediksi</td><td style="padding:6px 8px;">Tabel detail dengan pewarnaan status per baris prediksi</td></tr>
+                    <tr><td style="padding:6px 8px;">Countdown Timer</td><td style="padding:6px 8px;">Menampilkan waktu mundur dan progress bar hingga refresh berikutnya</td></tr>
+                    <tr><td style="padding:6px 8px;">Ringkasan Batch</td><td style="padding:6px 8px;">Menampilkan jumlah dan persentase data yang berstatus Aman, Waspada, dan Bahaya</td></tr>
                 </tbody>
             </table>
         </div>
@@ -196,7 +200,7 @@ def render_welcome_page():
                     </thead>
                     <tbody style="color:#BDBDBD;">
                         <tr><td style="padding:6px 8px;">Algorithm</td><td style="padding:6px 8px;">XGBoost + RegressorChain</td></tr>
-                        <tr><td style="padding:6px 8px;">Input</td><td style="padding:6px 8px;">6 features</td></tr>
+                        <tr><td style="padding:6px 8px;">Input</td><td style="padding:6px 8px;">8 features</td></tr>
                         <tr><td style="padding:6px 8px;">Output</td><td style="padding:6px 8px;">24-step × 3 features</td></tr>
                         <tr><td style="padding:6px 8px;">Total</td><td style="padding:6px 8px;">72 values per row</td></tr>
                         <tr><td style="padding:6px 8px;">Mode</td><td style="padding:6px 8px;">Batch</td></tr>

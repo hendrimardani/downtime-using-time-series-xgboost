@@ -1,56 +1,296 @@
-# Time Series Prediction Dashboard (XGBoost)
+# ⚙️ Dashboard Prediksi Downtime Mesin
 
-Proyek ini adalah sebuah *dashboard* interaktif berbasis web (menggunakan Streamlit) untuk memprediksi data sensor *time series* hingga 24 step (jam) ke depan menggunakan model Machine Learning **XGBoost**. Aplikasi ini dirancang dengan antarmuka (UI) bernuansa *dark mode* yang elegan dan interaktif.
+Dashboard interaktif berbasis web menggunakan **Streamlit** untuk memprediksi kondisi sensor mesin industri (suhu, getaran, dan tekanan) hingga **24 langkah (jam) ke depan** menggunakan model Machine Learning **XGBoost RegressorChain**.
+
+---
+
+## 📋 Daftar Isi
+
+- [Gambaran Umum](#gambaran-umum)
+- [Fitur Utama](#fitur-utama)
+- [Arsitektur Proyek](#arsitektur-proyek)
+- [Input (Masukan)](#input-masukan)
+- [Output (Keluaran)](#output-keluaran)
+- [Model Machine Learning](#model-machine-learning)
+- [Klasifikasi Status Mesin](#klasifikasi-status-mesin)
+- [Teknologi yang Digunakan](#teknologi-yang-digunakan)
+- [Cara Menjalankan Aplikasi](#cara-menjalankan-aplikasi)
+- [Cara Menggunakan Dashboard](#cara-menggunakan-dashboard)
+- [Struktur Direktori](#struktur-direktori)
+
+---
+
+## Gambaran Umum
+
+Proyek ini merupakan tugas akhir yang membangun sebuah sistem prediksi *downtime* mesin berbasis *time series*. Sistem membaca data sensor historis, lalu menggunakan model XGBoost yang telah dilatih untuk memperkirakan nilai sensor 24 jam ke depan dan mengklasifikasikannya ke dalam tiga kategori risiko: **Aman**, **Waspada**, atau **Bahaya**.
+
+---
 
 ## Fitur Utama
-- **Prediksi Otomatis 24-Step**: Memprediksi 3 parameter sensor (Suhu, Getaran, Tekanan) secara bersamaan untuk 24 step ke depan.
-- **Deteksi Risiko (Risk Assessment)**: Otomatis mengklasifikasikan kondisi mesin ke dalam status 🟢 Aman, 🟡 Waspada, atau 🔴 Bahaya berdasarkan nilai maksimal prediksi masing-masing parameter.
-- **Visualisasi Interaktif**: Menggunakan Plotly untuk memvisualisasikan tren sensor, korelasi (*heatmap*), dan sebaran risiko (grafik *donut* dan *bar*).
-- **Ekspor Data**: Menyediakan fitur untuk mengunduh hasil prediksi 24-step dalam bentuk CSV.
+
+| Fitur | Deskripsi |
+|:---|:---|
+| 🔮 **Prediksi 24-Step** | Memprediksi 3 parameter sensor (Suhu, Getaran, Tekanan) secara bersamaan untuk 24 langkah (jam) ke depan |
+| 🚦 **Deteksi Status Risiko** | Mengklasifikasikan tiap prediksi ke dalam status 🟢 Aman, 🟡 Waspada, atau 🔴 Bahaya secara otomatis |
+| 📊 **Visualisasi Interaktif** | Grafik detail 24-step dan grafik overlay semua fitur menggunakan Plotly |
+| 🔄 **Auto Refresh** | Halaman dapat diatur agar otomatis menyegarkan data setiap 1 menit, 1 jam, atau 1 hari |
+| ⏱️ **Countdown Timer** | Menampilkan waktu mundur dan progress bar hingga refresh berikutnya |
+| 📥 **Template CSV** | Menyediakan template CSV yang dapat diunduh sebagai panduan format input |
+| 📤 **Ekspor Hasil** | Mengunduh seluruh hasil prediksi dalam format **CSV** atau **JSON** |
+| 📋 **Tabel Prediksi** | Tabel detail dengan pewarnaan status per baris prediksi |
+| 📊 **Ringkasan Batch** | Menampilkan jumlah dan persentase data yang berstatus Aman, Waspada, dan Bahaya |
+| 🎛️ **Slider Navigasi** | Slider untuk berpindah antar-baris data ketika upload lebih dari satu baris |
+
+---
+
+## Arsitektur Proyek
+
+```
+Tugas Akhir Timeseries Streamlit/
+│
+├── dashboard.py              # Entry point aplikasi Streamlit (halaman utama)
+├── requirements.txt          # Daftar dependensi Python
+├── generate_test_data.py     # Skrip bantu untuk menghasilkan data uji
+├── raw_dataset.csv           # Dataset mentah mesin (data historis)
+├── test_data_future.csv      # Contoh data uji yang sudah digenerate
+├── xgboost_chain_model_24h.joblib  # Model XGBoost RegressorChain (pre-trained)
+│
+├── ui/                       # Modul antarmuka pengguna (UI)
+│   ├── __init__.py
+│   ├── styles.py             # Injeksi CSS dark-mode glassmorphism
+│   ├── components.py         # Komponen UI (header, KPI card, alert, footer, dll.)
+│   └── charts.py             # Fungsi pembuatan grafik Plotly
+│
+└── utils/                    # Modul utilitas backend
+    ├── __init__.py
+    ├── data.py               # Definisi FEATURES, TARGETS, HORIZON, dan fungsi ekspor
+    ├── model.py              # Loading model dan fungsi prediksi
+    └── preprocessing.py      # Konstanta ambang batas & fungsi klasifikasi status
+```
+
+---
 
 ## Input (Masukan)
-Aplikasi menerima input berupa file **CSV** dengan kolom-kolom *lag features* (data historis) yang mendeskripsikan kondisi sensor pada jam-jam sebelumnya. Berikut adalah penjelasan untuk setiap kolom yang dibutuhkan:
 
-| Nama Kolom | Satuan | Deskripsi |
-| :--- | :---: | :--- |
-| `temperature_lag1` | °C | Suhu mesin pada 1 jam (1 step) sebelum waktu saat ini. |
-| `temperature_lag24` | °C | Suhu mesin pada 24 jam (24 step) sebelum waktu saat ini. |
-| `vibration_lag1` | mm/s | Tingkat getaran mesin pada 1 jam (1 step) sebelum waktu saat ini. |
-| `vibration_lag24` | mm/s | Tingkat getaran mesin pada 24 jam (24 step) sebelum waktu saat ini. |
-| `pressure_bar_lag1` | bar | Tekanan operasional mesin pada 1 jam (1 step) sebelum waktu saat ini. |
-| `pressure_bar_lag24`| bar | Tekanan operasional mesin pada 24 jam (24 step) sebelum waktu saat ini. |
+Aplikasi menerima input berupa file **CSV** yang diunggah melalui sidebar. File harus memiliki **8 kolom** berikut:
 
-*Catatan: Aplikasi memiliki fitur auto-detect yang dapat menyesuaikan penamaan kolom yang bervariasi (misal: `suhu_lag1`, `temp_lag_1`, `tekanan_lag24`, dll) agar otomatis sesuai format standar.*
+| No | Nama Kolom | Tipe Data | Deskripsi |
+|:--:|:---|:---:|:---|
+| 1 | `temperature_C_lag_1` | `float` | Suhu mesin (°C) pada 1 jam sebelumnya |
+| 2 | `temperature_C_lag_24` | `float` | Suhu mesin (°C) pada 24 jam sebelumnya |
+| 3 | `vibration_mm_s_lag_1` | `float` | Getaran mesin (mm/s) pada 1 jam sebelumnya |
+| 4 | `vibration_mm_s_lag_24` | `float` | Getaran mesin (mm/s) pada 24 jam sebelumnya |
+| 5 | `pressure_bar_lag_1` | `float` | Tekanan mesin (bar) pada 1 jam sebelumnya |
+| 6 | `pressure_bar_lag_24` | `float` | Tekanan mesin (bar) pada 24 jam sebelumnya |
+| 7 | `day_of_week` | `int` | Hari dalam seminggu (`0` = Senin, `6` = Minggu) |
+| 8 | `is_holiday` | `int` | Indikator hari libur (`1` = libur, `0` = hari kerja) |
+
+> **Catatan:** Setiap baris pada CSV merepresentasikan satu titik waktu dan akan menghasilkan prediksi 24 langkah ke depan.
+
+### Contoh Format CSV
+
+| `temperature_C_lag_1` | `temperature_C_lag_24` | `vibration_mm_s_lag_1` | `vibration_mm_s_lag_24` | `pressure_bar_lag_1` | `pressure_bar_lag_24` | `day_of_week` | `is_holiday` |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 25.0 | 24.5 | 0.004 | 0.0038 | 2.0 | 1.8 | 0 | 0 |
+
+Template CSV dapat diunduh langsung dari dalam dashboard melalui sidebar → **Format CSV yang Diharapkan** → tombol **Download Template CSV**.
+
+### Cara Mendapatkan Data Input
+
+Jika Anda memiliki data mentah sensor mesin (seperti `raw_dataset.csv`), gunakan fungsi preprocessing yang tersedia di `utils/preprocessing.py` untuk menghasilkan file CSV yang siap diinput ke dashboard:
+
+```python
+from utils.preprocessing import preprocessing_data
+preprocessing_data('path/ke/raw_dataset.csv')
+# Menghasilkan file preprocessed_dataset.csv
+```
+
+---
 
 ## Output (Keluaran)
-- **Ringkasan Keseluruhan**: Menampilkan persentase jumlah data yang masuk ke kategori aman, waspada, atau bahaya.
-- **Tabel Ringkasan**: Merangkum nilai rata-rata dan maksimum prediksi untuk setiap baris data input.
-- **Grafik Detail per Data**: Menampilkan overlay perbandingan prediksi tiap fitur, grafik korelasi antar fitur, serta plot pergerakan untuk 24 step ke depan.
-- **File CSV Prediksi**: Dapat diunduh oleh pengguna yang berisi seluruh *time series* prediksi dari step 1 hingga 24.
+
+### 1. 📊 Grafik Prediksi (Tab "Grafik Detail")
+
+- **Grafik Prediksi 24-Step**: Grafik garis terpisah untuk suhu (Temperature °C), getaran (Vibration mm/s), dan tekanan (Pressure bar) selama 24 jam ke depan.
+- **Grafik Overlay Semua Fitur**: Grafik yang menampilkan ketiga fitur dalam satu tampilan untuk melihat pola bersama (*combined chart*).
+
+### 2. 📋 Tabel Prediksi (Tab "Tabel")
+
+Tabel berisi 24 baris prediksi dengan kolom:
+
+| Kolom | Keterangan |
+|:---|:---|
+| `Datetime` | Tanggal dan waktu prediksi (per jam) |
+| `Temperature (°C)` | Nilai prediksi suhu |
+| `Vibration (mm/s)` | Nilai prediksi getaran |
+| `Pressure (bar)` | Nilai prediksi tekanan |
+| `Status` | Klasifikasi risiko: `aman`, `waspada`, atau `bahaya` |
+
+### 3. 📈 Ringkasan Seluruh Prediksi
+
+Menampilkan 4 kartu KPI:
+- Jumlah prediksi berstatus 🟢 **Aman**
+- Jumlah prediksi berstatus 🟡 **Waspada**
+- Jumlah prediksi berstatus 🔴 **Bahaya**
+- **Tingkat Aman** (persentase)
+
+### 4. 💾 File yang Dapat Diunduh
+
+| Format | Nama File | Isi |
+|:---|:---|:---|
+| **CSV** | `prediksi_downtime_all.csv` | Seluruh prediksi 24 langkah dari semua baris data input |
+| **JSON** | `prediksi_downtime_all.json` | Sama seperti CSV, dalam format JSON (array of records) |
+
+Struktur kolom file ekspor: `Datetime`, `step`, `Temperature (°C)`, `Vibration (mm/s)`, `Pressure (bar)`, `Status`.
+
+---
+
+## Model Machine Learning
+
+| Parameter | Nilai |
+|:---|:---|
+| **Algoritma** | XGBoost + Scikit-learn `RegressorChain` |
+| **File Model** | `xgboost_chain_model_24h.joblib` |
+| **Fitur Input** | 8 kolom (6 lag features + 2 fitur temporal) |
+| **Horizon Prediksi** | 24 langkah ke depan (24 jam) |
+| **Variabel Target** | 3 variabel × 24 langkah = **72 nilai output** per baris |
+| **Mode Inferensi** | Batch (dapat memproses banyak baris sekaligus) |
+
+### Target Output Model
+
+Model memprediksi 72 nilai sekaligus dalam format:
+```
+temperature_C_t_1, vibration_mm_s_t_1, pressure_bar_t_1,
+temperature_C_t_2, vibration_mm_s_t_2, pressure_bar_t_2,
+...
+temperature_C_t_24, vibration_mm_s_t_24, pressure_bar_t_24
+```
+
+---
+
+## Klasifikasi Status Mesin
+
+Status setiap langkah prediksi ditentukan berdasarkan ambang batas statistik yang diturunkan dari data historis:
+
+### 🟢 Aman (Normal)
+
+Kondisi mesin beroperasi normal. Nilai prediksi berada dalam rentang berikut:
+
+| Parameter | Batas Bawah | Batas Atas |
+|:---|:---:|:---:|
+| Temperature (°C) | 70.63 | 77.65 |
+| Vibration (mm/s) | 3.236 | 4.680 |
+| Pressure (bar) | 4.780 | 5.140 |
+
+### 🟡 Waspada (Peringatan)
+
+Nilai prediksi berada di luar zona normal namun belum mencapai zona bahaya (nilai di antara ambang batas Normal dan Downtime).
+
+### 🔴 Bahaya (Downtime)
+
+Kondisi kritis yang mengindikasikan potensi *downtime*. Nilai prediksi berada dalam rentang berikut:
+
+| Parameter | Batas Bawah | Batas Atas |
+|:---|:---:|:---:|
+| Temperature (°C) | 15.99 | 22.46 |
+| Vibration (mm/s) | 0.008 | 0.023 |
+| Pressure (bar) | 0.010 | 0.040 |
+
+> **Logika Klasifikasi:** Status "Bahaya" diberikan hanya jika **ketiga** parameter sekaligus berada di zona bahaya. Jika hanya sebagian yang di luar normal, statusnya adalah "Waspada".
+
+---
 
 ## Teknologi yang Digunakan
-Proyek ini dibangun menggunakan teknologi berikut:
-- **Python** (Bahasa Pemrograman Utama)
-- **Streamlit** (Framework untuk pembuatan UI/Dashboard interaktif)
-- **XGBoost** (Algoritma Machine Learning untuk regresi berantai / *chain model*)
-- **Pandas & NumPy** (Manipulasi dan perhitungan matriks data)
-- **Plotly** (Visualisasi grafik interaktif & responsif)
-- **Joblib** (Untuk *loading* pretrained ML model)
+
+| Library | Versi | Fungsi |
+|:---|:---:|:---|
+| **Python** | 3.9+ | Bahasa pemrograman utama |
+| **Streamlit** | 1.58.0 | Framework dashboard web interaktif |
+| **streamlit-autorefresh** | 1.0.1 | Fitur auto refresh halaman |
+| **XGBoost** | 3.3.0 | Algoritma ML untuk prediksi *time series* |
+| **Scikit-learn** | 1.6.1 | `RegressorChain` untuk prediksi multi-output berantai |
+| **Pandas** | 2.3.3 | Manipulasi dan analisis data tabular |
+| **Plotly** | 6.8.0 | Visualisasi grafik interaktif |
+| **Joblib** | 1.5.3 | Memuat model ML dari file `.joblib` |
+
+---
 
 ## Cara Menjalankan Aplikasi
 
-1. Pastikan Anda telah menginstal **Python 3.9+** di komputer Anda.
-2. (*Opsional namun direkomendasikan*) Buat virtual environment terlebih dahulu:
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate   # (Untuk Windows)
-   ```
-3. Install seluruh paket/library yang dibutuhkan. Buka terminal dan jalankan:
-   ```bash
-   pip install streamlit pandas numpy plotly xgboost scikit-learn
-   ```
-4. Masuk ke direktori proyek ini dan jalankan aplikasi Streamlit:
-   ```bash
-   streamlit run dashboard.py
-   ```
-5. Aplikasi akan otomatis terbuka di browser web (secara default di `http://localhost:8501`).
+### Prasyarat
+
+- Python **3.9** atau lebih baru
+- Git (opsional)
+
+### Langkah Instalasi
+
+**1. Clone atau unduh repositori ini:**
+```bash
+git clone <url-repositori>
+cd "Tugas Akhir Timeseries Streamlit"
+```
+
+**2. (Direkomendasikan) Buat virtual environment:**
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**3. Install seluruh dependensi:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Jalankan aplikasi Streamlit:**
+```bash
+streamlit run dashboard.py
+```
+
+**5.** Aplikasi akan otomatis terbuka di browser pada alamat `http://localhost:8501`.
+
+---
+
+## Cara Menggunakan Dashboard
+
+1. **Buka aplikasi** di browser setelah menjalankan perintah di atas.
+2. **Atur Auto Refresh** (opsional) melalui dropdown di sidebar — pilih interval: nonaktif, 1 menit, 1 jam, atau 1 hari.
+3. **Upload file CSV** melalui tombol *file uploader* di sidebar. Pastikan format sesuai dengan 8 kolom yang dibutuhkan.
+4. Setelah file diunggah, dashboard secara otomatis:
+   - Menampilkan **preview data input** beserta jumlah baris dan kolom.
+   - Menjalankan **prediksi** menggunakan model XGBoost.
+   - Menampilkan **ambang batas statistik** untuk kategori Aman, Waspada, dan Bahaya.
+   - Menampilkan **detail prediksi** dalam bentuk grafik dan tabel.
+   - Menampilkan **ringkasan batch** seluruh prediksi.
+5. Gunakan **slider** (jika data lebih dari 1 baris) untuk berpindah antar-detail prediksi.
+6. **Unduh hasil** prediksi dalam format CSV atau JSON dari bagian bawah halaman.
+
+---
+
+## Struktur Direktori
+
+```
+Tugas Akhir Timeseries Streamlit/
+├── 📄 dashboard.py                    # Aplikasi utama Streamlit
+├── 📄 requirements.txt                # Dependensi Python
+├── 📄 generate_test_data.py           # Generator data uji dari raw_dataset.csv
+├── 📊 raw_dataset.csv                 # Dataset mentah sensor mesin
+├── 📊 test_data_future.csv            # Contoh data uji yang digenerate
+├── 🤖 xgboost_chain_model_24h.joblib  # Pre-trained model XGBoost
+│
+├── 📁 ui/
+│   ├── __init__.py                    # Ekspor fungsi UI
+│   ├── styles.py                      # CSS dark-mode & glassmorphism
+│   ├── components.py                  # Komponen Streamlit (header, card, dll.)
+│   └── charts.py                      # Grafik Plotly (forecast & combined)
+│
+└── 📁 utils/
+    ├── __init__.py                    # Ekspor fungsi utils
+    ├── data.py                        # Konstanta FEATURES, TARGETS, HORIZON
+    ├── model.py                       # Load model & run_prediction()
+    └── preprocessing.py               # Ambang batas & status_downtime()
+```
