@@ -1,15 +1,12 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import numpy as np
 
-# ── Color palette ────────────────────────────────────────────────────────────
 COLORS = {
     "temp":  {"line": "#f97316", "fill": "rgba(249,115,22,0.1)",  "marker": "#fb923c"},
     "vib":   {"line": "#8b5cf6", "fill": "rgba(139,92,246,0.1)",  "marker": "#a78bfa"},
     "pres":  {"line": "#06b6d4", "fill": "rgba(6,182,212,0.1)",   "marker": "#22d3ee"},
 }
 
-# ── Common layout helpers ────────────────────────────────────────────────────
 _FONT = dict(family="Inter, sans-serif", size=13, color="#e2e8f0")
 _HOVERLABEL = dict(
     bgcolor="rgba(15,15,26,0.95)",
@@ -33,17 +30,7 @@ def _base_layout(**overrides):
     base.update(overrides)
     return base
 
-
-def _style_axis(fig, row_col_pairs=None):
-    """Apply grid colour to every axis present in *fig*."""
-    fig.update_xaxes(gridcolor=_GRID_COLOR, zeroline=False)
-    fig.update_yaxes(gridcolor=_GRID_COLOR, zeroline=False)
-
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 1.  Forecast chart  –  3‑row subplots (shared x‑axis)
-# ═════════════════════════════════════════════════════════════════════════════
-def create_forecast_chart(steps, temp_pred, vib_pred, pres_pred):
+def create_forecast_chart(time_future, temp_pred, vib_pred, pres_pred):
     fig = make_subplots(
         rows=3, cols=1,
         shared_xaxes=True,
@@ -68,7 +55,7 @@ def create_forecast_chart(steps, temp_pred, vib_pred, pres_pred):
     for pred, name, unit, row in traces:
         fig.add_trace(
             go.Scatter(
-                x=steps, y=pred,
+                x=time_future, y=pred,
                 mode="lines+markers",
                 name="Future Forecast (24 Jam)",
                 line=dict(color="red", width=2, shape="linear"),
@@ -81,19 +68,7 @@ def create_forecast_chart(steps, temp_pred, vib_pred, pres_pred):
         fig.update_yaxes(title_text=name, row=row, col=1, gridcolor="rgba(99,102,241,0.08)", zeroline=False)
         fig.update_xaxes(gridcolor="rgba(99,102,241,0.08)", row=row, col=1, zeroline=False)
 
-    # Add a dummy trace for the purple line to show in legend
-    fig.add_trace(
-        go.Scatter(
-            x=[None], y=[None],
-            mode="lines",
-            name="Titik Waktu Sekarang (Present)",
-            line=dict(color="purple", width=2),
-        ),
-        row=1, col=1
-    )
-
-    fig.update_xaxes(title_text="Step ke-", row=3, col=1)
-
+    fig.update_xaxes(title_text="Jam ke-", row=3, col=1)
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -114,16 +89,12 @@ def create_forecast_chart(steps, temp_pred, vib_pred, pres_pred):
     )
     return fig
 
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 2.  Combined chart  –  single chart, 3 y‑axes
-# ═════════════════════════════════════════════════════════════════════════════
-def create_combined_chart(steps, temp_pred, vib_pred, pres_pred):
+def create_combined_chart(time_future, temp_pred, vib_pred, pres_pred):
     fig = go.Figure()
 
     # Temperature → y1 (left)
     fig.add_trace(go.Scatter(
-        x=steps, y=temp_pred,
+        x=time_future, y=temp_pred,
         mode="lines+markers",
         name="Temperature",
         line=dict(color=COLORS["temp"]["line"], width=2.5, shape="spline"),
@@ -134,7 +105,7 @@ def create_combined_chart(steps, temp_pred, vib_pred, pres_pred):
 
     # Vibration → y2 (right)
     fig.add_trace(go.Scatter(
-        x=steps, y=vib_pred,
+        x=time_future, y=vib_pred,
         mode="lines+markers",
         name="Vibration",
         line=dict(color=COLORS["vib"]["line"], width=2.5, shape="spline"),
@@ -145,7 +116,7 @@ def create_combined_chart(steps, temp_pred, vib_pred, pres_pred):
 
     # Pressure → y3 (far right)
     fig.add_trace(go.Scatter(
-        x=steps, y=pres_pred,
+        x=time_future, y=pres_pred,
         mode="lines+markers",
         name="Pressure",
         line=dict(color=COLORS["pres"]["line"], width=2.5, shape="spline"),
@@ -158,7 +129,7 @@ def create_combined_chart(steps, temp_pred, vib_pred, pres_pred):
         **_base_layout(
             height=500,
             xaxis=dict(
-                title="Step ke-",
+                title="Jam ke-",
                 gridcolor=_GRID_COLOR,
                 zeroline=False,
                 domain=[0, 0.9],
@@ -193,178 +164,6 @@ def create_combined_chart(steps, temp_pred, vib_pred, pres_pred):
                 xanchor="center",
                 x=0.5,
             ),
-        )
-    )
-    return fig
-
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 3.  Heatmap  –  correlation matrix
-# ═════════════════════════════════════════════════════════════════════════════
-def create_heatmap_chart(df_pred):
-    corr = df_pred[["temperature", "vibration", "pressure_bar"]].corr()
-    labels = ["Temperature", "Vibration", "Pressure"]
-
-    text_vals = np.around(corr.values, decimals=3).astype(str)
-
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=corr.values,
-            x=labels,
-            y=labels,
-            colorscale="Viridis",
-            zmin=-1,
-            zmax=1,
-            text=text_vals,
-            texttemplate="%{text}",
-            textfont=dict(size=14, color="#e2e8f0"),
-            hovertemplate="(%{x}, %{y}): %{z:.3f}<extra></extra>",
-            colorbar=dict(
-                title=dict(text="Korelasi", font=dict(color="#e2e8f0")),
-                tickfont=dict(color="#e2e8f0"),
-            ),
-        )
-    )
-
-    fig.update_layout(
-        **_base_layout(
-            height=400,
-            xaxis=dict(tickfont=dict(color="#e2e8f0")),
-            yaxis=dict(tickfont=dict(color="#e2e8f0"), autorange="reversed"),
-        )
-    )
-    return fig
-
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 4.  Batch overview  –  bar chart with threshold lines
-# ═════════════════════════════════════════════════════════════════════════════
-def _threshold_color(value, warning, danger):
-    """Return green / amber / red based on threshold."""
-    if value >= danger:
-        return "#ef4444"
-    if value >= warning:
-        return "#f59e0b"
-    return "#10b981"
-
-
-def create_batch_overview_chart(all_results, thresholds):
-    fig = make_subplots(
-        rows=3, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.2,
-        subplot_titles=(
-            "🌡️ Maks Temperature per Data",
-            "📳 Maks Vibration per Data",
-            "🔵 Maks Pressure per Data",
-        ),
-    )
-
-    n = len(all_results)
-    x_labels = [f"{i+1}" for i in range(n)]
-
-    configs = [
-        ("max_temp", "temp", "°C",  1),
-        ("max_vib",  "vib",  "mm/s", 2),
-        ("max_pres", "pres", "bar",  3),
-    ]
-
-    for key, thr_key, unit, row in configs:
-        values = [r[key] for r in all_results]
-        warn = thresholds[thr_key]["warning"]
-        dang = thresholds[thr_key]["danger"]
-
-        bar_colors = [_threshold_color(v, warn, dang) for v in values]
-
-        fig.add_trace(
-            go.Bar(
-                x=x_labels,
-                y=values,
-                marker_color=bar_colors,
-                hovertemplate=f"Data %{{x}}: %{{y:.2f}} {unit}<extra></extra>",
-                showlegend=False,
-            ),
-            row=row, col=1,
-        )
-
-        # Warning line (amber dashed)
-        fig.add_hline(
-            y=warn, row=row, col=1,
-            line=dict(color="#f59e0b", width=1.5, dash="dash"),
-            opacity=0.5,
-            annotation_text=f"Warning ({warn})",
-            annotation_font=dict(color="#f59e0b", size=11),
-            annotation_position="top right",
-        )
-        # Danger line (red dashed)
-        fig.add_hline(
-            y=dang, row=row, col=1,
-            line=dict(color="#ef4444", width=1.5, dash="dash"),
-            opacity=0.5,
-            annotation_text=f"Danger ({dang})",
-            annotation_font=dict(color="#ef4444", size=11),
-            annotation_position="top right",
-        )
-
-        fig.update_yaxes(title_text=unit, row=row, col=1)
-
-    fig.update_xaxes(title_text="Data ke-", row=3, col=1)
-
-    fig.update_layout(
-        **_base_layout(
-            height=850,
-            margin=dict(l=60, r=60, t=80, b=60),
-            showlegend=False,
-        )
-    )
-    _style_axis(fig)
-    return fig
-
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 5.  Risk donut chart
-# ═════════════════════════════════════════════════════════════════════════════
-def create_risk_donut_chart(n_safe, n_warning, n_danger):
-    total = n_safe + n_warning + n_danger
-    labels = ["Aman (Safe)", "Peringatan (Warning)", "Bahaya (Danger)"]
-    values = [n_safe, n_warning, n_danger]
-    colors = ["#10b981", "#f59e0b", "#ef4444"]
-
-    fig = go.Figure(
-        data=go.Pie(
-            labels=labels,
-            values=values,
-            hole=0.6,
-            marker=dict(colors=colors, line=dict(color="rgba(0,0,0,0.3)", width=2)),
-            textinfo="percent",
-            textposition="inside",
-            textfont=dict(size=14, color="#e2e8f0", family="Inter, sans-serif"),
-            hovertemplate="%{label}: %{value} data (%{percent})<extra></extra>",
-            sort=False,
-        )
-    )
-
-    fig.update_layout(
-        **_base_layout(
-            height=380,
-            margin=dict(l=10, r=10, t=30, b=60),
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.1,
-                xanchor="center",
-                x=0.5,
-                font=dict(color="#e2e8f0"),
-            ),
-            annotations=[
-                dict(
-                    text=f"<b>{total}</b><br>Total",
-                    x=0.5, y=0.5,
-                    font=dict(size=22, color="#e2e8f0", family="Inter, sans-serif"),
-                    showarrow=False,
-                )
-            ],
         )
     )
     return fig

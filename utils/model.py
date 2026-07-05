@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import os
+from utils.preprocessing import status_downtime
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "xgboost_chain_model_24h.joblib")
 
@@ -12,26 +13,28 @@ def load_model():
 
 def future_pred_clean_df(last_time, future_pred_df, horizon):
     future_clean = {
-        'temperature_pred': [],
-        'vibration_pred': [],
+        'temperature_C_pred': [],
+        'vibration_mm_s_pred': [],
         'pressure_bar_pred': []
     }
 
     for i in range(future_pred_df.shape[0]):
         if i % 3 == 0:
-            future_clean['temperature_pred'].append(float(future_pred_df.iloc[i].values[0]))
+            future_clean['temperature_C_pred'].append(float(future_pred_df.iloc[i].values[0]))
         elif i % 3 == 1:
-            future_clean['vibration_pred'].append(float(future_pred_df.iloc[i].values[0]))
+            future_clean['vibration_mm_s_pred'].append(float(future_pred_df.iloc[i].values[0]))
         else:
             future_clean['pressure_bar_pred'].append(float(future_pred_df.iloc[i].values[0]))
 
     time_future = pd.date_range(start=last_time + pd.Timedelta(hours=1), periods=horizon, freq='1H')
     future_clean_df = pd.DataFrame(future_clean, index=time_future)
+    future_clean_df['status'] = future_clean_df.apply(status_downtime, axis=1)
 
-    temp_pred = future_clean_df['temperature_pred'].values
-    vib_pred = future_clean_df['vibration_pred'].values
+    temp_pred = future_clean_df['temperature_C_pred'].values
+    vib_pred = future_clean_df['vibration_mm_s_pred'].values
     pres_pred = future_clean_df['pressure_bar_pred'].values
-    return temp_pred, vib_pred, pres_pred
+    status = future_clean_df['status'].values
+    return time_future, temp_pred, vib_pred, pres_pred, status
 
 def run_prediction(model, last_time, X_input, TARGETS, horizon):
     """Run batch prediction and parse results.
@@ -46,10 +49,11 @@ def run_prediction(model, last_time, X_input, TARGETS, horizon):
     """
     y_pred = model.predict(X_input).flatten()
     y_pred_df = pd.DataFrame(y_pred, index=TARGETS)
-    temp_pred, vib_pred, pres_pred = future_pred_clean_df(last_time, y_pred_df, horizon)
+    time_future, temp_pred, vib_pred, pres_pred, status = future_pred_clean_df(last_time, y_pred_df, horizon)
     
     results = []
     results.append({
+        "time_future": time_future,
         "temp_pred": temp_pred,
         "vib_pred": vib_pred,
         "pres_pred": pres_pred,
@@ -59,5 +63,6 @@ def run_prediction(model, last_time, X_input, TARGETS, horizon):
         "max_temp": float(temp_pred.max()),
         "max_vib": float(vib_pred.max()),
         "max_pres": float(pres_pred.max()),
+        "status": status
     })
     return results

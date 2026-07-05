@@ -1,7 +1,25 @@
 import pandas as pd
-import numpy as np
 
 PATH_CSV = '../raw_dataset.csv'
+
+# Normal
+LOWER_TEMP_NORMAL = 70.630000
+LOWER_VIB_NORMAL = 3.236000
+LOWER_PRESS_NORMAL = 4.780000
+
+UPPER_TEMP_NORMAL = 77.650000
+UPPER_VIB_NORMAL = 4.680000
+UPPER_PRESS_NORMAL = 5.140000
+
+# Bahaya
+LOWER_TEMP_DOWNTIME = 15.990000
+LOWER_VIB_DOWNTIME = 0.008000
+LOWER_PRESS_DOWNTIME = 0.010000
+
+UPPER_TEMP_DOWNTIME = 22.460000
+UPPER_VIB_DOWNTIME = 0.023000
+UPPER_PRESS_DOWNTIME = 0.040000
+
 
 def preprocessing_data(df):
     df = pd.read_csv(df)
@@ -54,6 +72,22 @@ def preprocessing_data(df):
     last_row = last_row[features]
 
     return last_row.to_csv(f'../{year}_{month}_{day}_{hour}_{minute:02d}_00_preprocessed_data.csv', index=False)
+
+def status_downtime(row):
+    is_threshold_temp_normal = LOWER_TEMP_NORMAL <= row['temperature_C_pred'] <= UPPER_TEMP_NORMAL
+    is_threshold_vib_normal = LOWER_VIB_NORMAL <= row['vibration_mm_s_pred'] <= UPPER_VIB_NORMAL
+    is_threshold_pres_normal = LOWER_PRESS_NORMAL <= row['pressure_bar_pred'] <= UPPER_PRESS_NORMAL
+
+    if not is_threshold_temp_normal and not is_threshold_vib_normal and not is_threshold_pres_normal:
+        is_threshold_temp_downtime = LOWER_TEMP_DOWNTIME <= row['temperature_C_pred'] <= UPPER_TEMP_DOWNTIME
+        is_threshold_vib_downtime = LOWER_VIB_DOWNTIME <= row['vibration_mm_s_pred'] <= UPPER_VIB_DOWNTIME
+        is_threshold_press_downtime = LOWER_PRESS_DOWNTIME <= row['pressure_bar_pred'] <= UPPER_PRESS_DOWNTIME
+
+        if is_threshold_temp_downtime and is_threshold_vib_downtime and is_threshold_press_downtime:
+            return 'bahaya'
+        return 'waspada'
+    else:
+        return 'aman'
 
 if __name__ == "__main__":
     print(preprocessing_data(PATH_CSV))

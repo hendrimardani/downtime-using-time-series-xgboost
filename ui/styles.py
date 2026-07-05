@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def inject_css() -> None:
     """Inject premium dark-theme dashboard CSS into the Streamlit app."""
     st.markdown(
@@ -438,3 +437,11 @@ def inject_css() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+def color_status(val):
+    if val == "aman":
+        return "color: #00d48a; font-weight: bold;"
+    elif val == "waspada":
+        return "color: #f1c40f; font-weight: bold;"
+    else:
+        return "color: #ff4b4b; font-weight: bold;"
