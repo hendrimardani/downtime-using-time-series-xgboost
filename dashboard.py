@@ -3,6 +3,7 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
 import pandas as pd
+import streamlit.components.v1 as components
 from utils.data import create_export_dataframe
 from ui import (
     inject_css,
@@ -78,9 +79,6 @@ with st.sidebar:
 
         refresh_interval_sec = refresh_interval_ms // 1000
         last_refresh_time = datetime.now().strftime('%H:%M:%S')
-
-        import streamlit.components.v1 as components
-
         countdown_html = f"""
         <!DOCTYPE html>
         <html>

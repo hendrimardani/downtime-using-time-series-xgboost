@@ -126,8 +126,30 @@ def render_welcome_page():
         unsafe_allow_html=True,
     )
 
+    st.markdown(
+        """
+        <div style="background:rgba(255,255,255,0.04); backdrop-filter:blur(12px);
+                    border:1px solid rgba(255,255,255,0.08); border-radius:16px;
+                    padding:1.5rem; margin-top:1rem;">
+            <h4 style="color:#E0E0E0; margin-top:0;">✨ Fitur yang Tersedia</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.15);">
+                        <th style="text-align:left; padding:8px; color:#90CAF9;">Nama</th>
+                        <th style="text-align:left; padding:8px; color:#90CAF9;">Deskripsi</th>
+                    </tr>
+                </thead>
+                <tbody style="color:#BDBDBD;">
+                    <tr><td style="padding:6px 8px;">Auto Refresh</td><td style="padding:6px 8px;">Auto refresh secara realtime (1 menit, 1 jam, dan 1 hari) disesuaikan sesuai kebutuhan.</td></tr>
+                    <tr><td style="padding:6px 8px;">Export Hasil Prediksi</td><td style="padding:6px 8px;">Ekspor hasil prediksi ke berbagai format seperti CSV dan JSON untuk analisis lebih lanjut.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
     col_left, col_right = st.columns(2)
-
     with col_left:
         st.markdown(
             """
