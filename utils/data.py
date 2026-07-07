@@ -15,14 +15,14 @@ TARGETS = [f"{feature}_{i}" for i in range(1, HORIZON + 1) for feature in COLUMN
 def create_export_dataframe(all_results):
     """Create a flat DataFrame for export with all predictions."""
     rows = []
-    for r in all_results:
+    for row in all_results:
         for s in range(24):
             rows.append({
-                "Datetime": r["time_future"][s],
+                "Datetime": row["time_future"][s],
                 "step": s + 1,
-                "Temperature (°C)": r["temp_pred"][s],
-                "Vibration (mm/s)": r["vib_pred"][s],
-                "Pressure (bar)": r["pres_pred"][s],
-                "Status": r["status"][s],
+                "Temperature (°C)": row["temp_pred"][s],
+                "Vibration (mm/s)": row["vib_pred"][s],
+                "Pressure (bar)": row["pres_pred"][s],
+                "Status": row["status"][s],
             })
     return pd.DataFrame(rows)

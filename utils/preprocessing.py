@@ -1,6 +1,8 @@
 import pandas as pd
 
-PATH_CSV ='../raw_dataset.csv'
+INPUT_RAW_DATASET ='../raw_dataset.csv'
+OUTPUT_DATA_PREPROCESSING = '../preprocessed_dataset.csv'
+OUTPUT_LOGGING = '../'
 
 # Normal
 LOWER_TEMP_NORMAL = 70.630000
@@ -68,7 +70,7 @@ def preprocessing_data(df):
                     or feature in ['timestamp', 'day_of_week', 'is_holiday']
         ]
     last_row = last_row[features]
-    return last_row.to_csv(f'../preprocessed_dataset.csv', index=False)
+    last_row.to_csv(OUTPUT_DATA_PREPROCESSING, index=False)
 
 def status_downtime(row):
     is_threshold_temp_normal = LOWER_TEMP_NORMAL <= row['temperature_C_pred'] <= UPPER_TEMP_NORMAL
@@ -86,5 +88,6 @@ def status_downtime(row):
     else:
         return 'aman'
 
+
 if __name__ == "__main__":
-    print(preprocessing_data(PATH_CSV))
+    preprocessing_data(INPUT_RAW_DATASET)
