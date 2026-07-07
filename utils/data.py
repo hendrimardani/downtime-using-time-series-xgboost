@@ -22,7 +22,7 @@ def create_export_dataframe(all_results):
                 "step": s + 1,
                 "Temperature (°C)": row["temp_pred"][s],
                 "Vibration (mm/s)": row["vib_pred"][s],
-                "Pressure (bar)": row["pres_pred"][s],
+                "Pressure (bar)": row["press_pred"][s],
                 "Status": row["status"][s],
             })
     return pd.DataFrame(rows)

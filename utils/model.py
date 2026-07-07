@@ -56,13 +56,7 @@ def run_prediction(model, last_time, X_input, TARGETS, horizon):
         "time_future": time_future,
         "temp_pred": temp_pred,
         "vib_pred": vib_pred,
-        "pres_pred": pres_pred,
-        "avg_temp": float(temp_pred.mean()),
-        "avg_vib": float(vib_pred.mean()),
-        "avg_pres": float(pres_pred.mean()),
-        "max_temp": float(temp_pred.max()),
-        "max_vib": float(vib_pred.max()),
-        "max_pres": float(pres_pred.max()),
+        "press_pred": pres_pred,
         "status": status
     })
     return results

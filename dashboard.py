@@ -201,13 +201,13 @@ if data_available:
     tab_charts, tab_table = st.tabs(["📈 Grafik Detail", "📋 Tabel"])
     with tab_charts:
         st.markdown(f"#### 📈 Grafik Prediksi 24-Step")
-        fig_detail = create_forecast_chart(row_pred["time_future"], row_pred["temp_pred"], row_pred["vib_pred"], row_pred["pres_pred"])
+        fig_detail = create_forecast_chart(row_pred["time_future"], row_pred["temp_pred"], row_pred["vib_pred"], row_pred["press_pred"])
         st.plotly_chart(fig_detail, use_container_width=True, key="detail_forecast", theme=None)
 
         st.markdown("---")
 
         st.markdown("#### 🔀 Overlay Semua Fitur")
-        fig_comb = create_combined_chart(row_pred["time_future"], row_pred["temp_pred"], row_pred["vib_pred"], row_pred["pres_pred"])
+        fig_comb = create_combined_chart(row_pred["time_future"], row_pred["temp_pred"], row_pred["vib_pred"], row_pred["press_pred"])
         st.plotly_chart(fig_comb, use_container_width=True, key="detail_combined", theme=None)
 
     with tab_table:
@@ -216,7 +216,7 @@ if data_available:
             "Datetime": row_pred["time_future"],
             "Temperature (°C)": row_pred["temp_pred"],
             "Vibration (mm/s)": row_pred["vib_pred"],
-            "Pressure (bar)": row_pred["pres_pred"],
+            "Pressure (bar)": row_pred["press_pred"],
             "Status": row_pred["status"],
         }).set_index("Datetime")
         df_detail_styled = df_detail.style.map(color_status, subset=["Status"])
