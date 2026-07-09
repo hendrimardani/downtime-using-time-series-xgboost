@@ -42,7 +42,6 @@ Proyek ini adalah sebuah aplikasi web interaktif yang dibangun menggunakan frame
 | 📤 **Ekspor Hasil** | Mengunduh seluruh hasil prediksi dalam format **CSV** atau **JSON** |
 | 📋 **Tabel Prediksi** | Tabel detail dengan pewarnaan status per baris prediksi |
 | 📊 **Ringkasan Batch** | Menampilkan jumlah dan persentase data yang berstatus Aman, Waspada, dan Bahaya |
-| 🎛️ **Slider Navigasi** | Slider untuk berpindah antar-baris data ketika upload lebih dari satu baris |
 | 📝 **Logging Tracking** | Menampilkan informasi logging eksekusi autorefresh dan script di background |
 
 ## Informasi Dataset (Dataset Mentah)
