@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+from datetime import datetime
 
 HORIZON = 24
 COLUMNS_TARGETS = ["temperature_C_t", "vibration_mm_s_t", "pressure_bar_t"]
@@ -12,7 +14,7 @@ FEATURES = [
 TARGETS = [f"{feature}_{i}" for i in range(1, HORIZON + 1) for feature in COLUMNS_TARGETS]
 
 
-def create_export_dataframe(all_results):
+def export_predictions_df(all_results):
     """Create a flat DataFrame for export with all predictions."""
     rows = []
     for row in all_results:
@@ -26,3 +28,11 @@ def create_export_dataframe(all_results):
                 "Status": row["status"][s],
             })
     return pd.DataFrame(rows)
+
+def export_logging_df(output_logging, status):
+    is_file_exists = os.path.exists(output_logging)
+    df = pd.DataFrame({
+        "Timestamp": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+        "Status": [status]
+    })
+    df.to_csv(output_logging, mode="a", index=False, header=not is_file_exists)

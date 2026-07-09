@@ -8,7 +8,7 @@ Dashboard interaktif berbasis web menggunakan **Streamlit** untuk memprediksi ko
 
 - [Gambaran Umum](#gambaran-umum)
 - [Fitur Utama](#fitur-utama)
-- [Arsitektur Proyek](#arsitektur-proyek)
+- [Informasi Dataset (Dataset Mentah)](#informasi-dataset-dataset-mentah)
 - [Input (Masukan)](#input-masukan)
 - [Output (Keluaran)](#output-keluaran)
 - [Model Machine Learning](#model-machine-learning)
@@ -16,7 +16,7 @@ Dashboard interaktif berbasis web menggunakan **Streamlit** untuk memprediksi ko
 - [Teknologi yang Digunakan](#teknologi-yang-digunakan)
 - [Cara Menjalankan Aplikasi](#cara-menjalankan-aplikasi)
 - [Cara Menggunakan Dashboard](#cara-menggunakan-dashboard)
-- [Struktur Direktori](#struktur-direktori)
+- [Struktur Proyek](#struktur-proyek)
 
 ---
 
@@ -40,35 +40,30 @@ Proyek ini merupakan tugas akhir yang membangun sebuah sistem prediksi *downtime
 | 📋 **Tabel Prediksi** | Tabel detail dengan pewarnaan status per baris prediksi |
 | 📊 **Ringkasan Batch** | Menampilkan jumlah dan persentase data yang berstatus Aman, Waspada, dan Bahaya |
 | 🎛️ **Slider Navigasi** | Slider untuk berpindah antar-baris data ketika upload lebih dari satu baris |
+| 📝 **Logging Tracking** | Menampilkan informasi logging eksekusi autorefresh dan script di background |
 
----
+## Informasi Dataset (Dataset Mentah)
 
-## Arsitektur Proyek
+### Deskripsi Dataset
 
-```
-Tugas Akhir Timeseries Streamlit/
-│
-├── dashboard.py              # Entry point aplikasi Streamlit (halaman utama)
-├── requirements.txt          # Daftar dependensi Python
-├── generate_test_data.py     # Skrip bantu untuk menghasilkan data uji
-├── raw_dataset.csv           # Dataset mentah mesin (data historis)
-├── test_data_future.csv      # Contoh data uji yang sudah digenerate
-├── xgboost_chain_model_24h.joblib  # Model XGBoost RegressorChain (pre-trained)
-│
-├── ui/                       # Modul antarmuka pengguna (UI)
-│   ├── __init__.py
-│   ├── styles.py             # Injeksi CSS dark-mode glassmorphism
-│   ├── components.py         # Komponen UI (header, KPI card, alert, footer, dll.)
-│   └── charts.py             # Fungsi pembuatan grafik Plotly
-│
-└── utils/                    # Modul utilitas backend
-    ├── __init__.py
-    ├── data.py               # Definisi FEATURES, TARGETS, HORIZON, dan fungsi ekspor
-    ├── model.py              # Loading model dan fungsi prediksi
-    └── preprocessing.py      # Konstanta ambang batas & fungsi klasifikasi status
-```
+Dataset ini menyajikan gambaran terstruktur mengenai pemantauan mesin industri untuk pemeliharaan prediktif dan analisis manufaktur cerdas. Dataset ini menggabungkan pembacaan sensor, kejadian kegagalan mesin, dan catatan pemeliharaan dalam tiga berkas CSV.
 
----
+| Fitur | Deskripsi |
+|:---|:---|
+| 🕒 **timestamp** | Tanggal dan waktu ketika pembacaan sensor dicatat |
+| ⚙️ **machine_id** | Pengidentifikasi unik dari mesin yang dipantau |
+| 🌡️ **temperature_C** | Suhu mesin diukur dalam derajat Celcius |
+| 📳 **vibration_mm_s** | Tingkat getaran mesin diukur dalam milimeter per detik |
+| 🔧 **pressure_bar** | Tingkat tekanan mesin yang diukur dalam bar |
+| 🚦 **status** | Status operasi mesin saat ini, seperti sedang berjalan atau berhenti |
+| ⌛ **operating_hours** | Total waktu pengoperasian mesin yang telah terakumulasi |
+| 🌡️ **ambient_temp_C** | Suhu lingkungan di sekitar mesin dalam derajat Celcius |
+| 🌓 **shift** | Shift kerja saat pembacaan sensor tersebut dicatat |
+| 📦 **production_count** | Jumlah total unit yang diproduksi selama periode yang dicatat |
+| ❌ **defect_count** | Jumlah unit cacat yang diproduksi selama periode yang dicatat |
+| ✅ **good_count** | Jumlah unit berkualitas baik yang diproduksi selama periode yang dicatat |
+
+Tautan dataset: https://www.kaggle.com/datasets/harrachimustapha/maintenance-machine?select=sensor_data.csv
 
 ## Input (Masukan)
 
@@ -226,8 +221,8 @@ Kondisi kritis yang mengindikasikan potensi *downtime*. Nilai prediksi berada da
 
 **1. Clone atau unduh repositori ini:**
 ```bash
-git clone <url-repositori>
-cd "Tugas Akhir Timeseries Streamlit"
+git clone https://github.com/hendrimardani/downtime-using-time-series-xgboost.git
+cd "downtime-using-time-series-xgboost"
 ```
 
 **2. (Direkomendasikan) Buat virtual environment:**
@@ -258,8 +253,9 @@ streamlit run dashboard.py
 ## Cara Menggunakan Dashboard
 
 1. **Buka aplikasi** di browser setelah menjalankan perintah di atas.
+2. Masuk ke folder **utils** kemudian jalankan dengan perintah ```python preprocessing.py``` tujuannya membuat berkas bernama **preprocessed_dataset.csv** yang nantinya akan digunakan untuk input fitur yang dibutuhkan oleh model saat inferensi.
 2. **Atur Auto Refresh** (opsional) melalui dropdown di sidebar — pilih interval: nonaktif, 1 menit, 1 jam, atau 1 hari.
-3. **Upload file CSV** melalui tombol *file uploader* di sidebar. Pastikan format sesuai dengan 8 kolom yang dibutuhkan.
+3. **Upload file CSV** yang baru saja dibuat hasil preprocessing data yang bernama **preprocessed_dataset.csv** melalui tombol *file uploader* di sidebar. Pastikan format sesuai dengan 8 kolom yang dibutuhkan.
 4. Setelah file diunggah, dashboard secara otomatis:
    - Menampilkan **preview data input** beserta jumlah baris dan kolom.
    - Menjalankan **prediksi** menggunakan model XGBoost.
@@ -271,10 +267,10 @@ streamlit run dashboard.py
 
 ---
 
-## Struktur Direktori
+## Struktur Proyek
 
 ```
-Tugas Akhir Timeseries Streamlit/
+Downtime using Time Series XGBoost-RegressionChain/
 ├── 📄 dashboard.py                    # Aplikasi utama Streamlit
 ├── 📄 requirements.txt                # Dependensi Python
 ├── 📄 generate_test_data.py           # Generator data uji dari raw_dataset.csv
@@ -282,6 +278,10 @@ Tugas Akhir Timeseries Streamlit/
 ├── 📊 test_data_future.csv            # Contoh data uji yang digenerate
 ├── 🤖 xgboost_chain_model_24h.joblib  # Pre-trained model XGBoost
 │
+|── 📁 logging/                       # Logging
+│   ├── autorefresh.csv                # Logging untuk autorefresh
+│   └── preprocessing_script.csv       # Logging untuk script di background
+|
 ├── 📁 ui/
 │   ├── __init__.py                    # Ekspor fungsi UI
 │   ├── styles.py                      # CSS dark-mode & glassmorphism

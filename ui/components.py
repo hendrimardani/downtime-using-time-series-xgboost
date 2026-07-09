@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import os
 import streamlit.components.v1 as components
+from utils.data import export_logging_df
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
 
@@ -121,10 +122,11 @@ def render_welcome_page():
                 <tbody style="color:#BDBDBD;">
                     <tr><td style="padding:6px 8px;">Auto Refresh</td><td style="padding:6px 8px;">Auto refresh secara realtime (1 menit, 1 jam, dan 1 hari) disesuaikan sesuai kebutuhan.</td></tr>
                     <tr><td style="padding:6px 8px;">Export Hasil Prediksi</td><td style="padding:6px 8px;">Ekspor hasil prediksi ke berbagai format seperti CSV dan JSON untuk analisis lebih lanjut.</td></tr>
-                    <tr><td style="padding:6px 8px;">Deteksi Status Risiko Downtime</td><td style="padding:6px 8px;">Mengklasifikasikan tiap prediksi ke dalam status 🟢 Aman, 🟡 Waspada, atau 🔴 Bahaya secara otomatis (early sistem warning)</td></tr>
+                    <tr><td style="padding:6px 8px;">Deteksi Status Risiko Downtime</td><td style="padding:6px 8px;">Mengklasifikasikan tiap prediksi ke dalam status Aman, Waspada, dan Bahaya secara otomatis (early sistem warning)</td></tr>
                     <tr><td style="padding:6px 8px;">Tabel Prediksi</td><td style="padding:6px 8px;">Tabel detail dengan pewarnaan status per baris prediksi</td></tr>
                     <tr><td style="padding:6px 8px;">Countdown Timer</td><td style="padding:6px 8px;">Menampilkan waktu mundur dan progress bar hingga refresh berikutnya</td></tr>
                     <tr><td style="padding:6px 8px;">Ringkasan Batch</td><td style="padding:6px 8px;">Menampilkan jumlah dan persentase data yang berstatus Aman, Waspada, dan Bahaya</td></tr>
+                    <tr><td style="padding:6px 8px;">Logging Tracking</td><td style="padding:6px 8px;">Menampilkan informasi logging eksekusi autorefresh dan script di background</td></tr>
                 </tbody>
             </table>
         </div>
@@ -190,9 +192,10 @@ def render_welcome_page():
             unsafe_allow_html=True,
         )
 
-def render_autorefresh(header):
-    st.markdown(header)
+def render_autorefresh(header, output_logging):
+    status = None
 
+    st.markdown(header)
     refresh_options = {
         "Nonaktif": None,
         "⏱️ Setiap 1 Menit": 60 * 1000,
@@ -210,131 +213,139 @@ def render_autorefresh(header):
     refresh_interval_ms = refresh_options[selected_refresh]
 
     if refresh_interval_ms is not None:
-        refresh_count = st_autorefresh(
-            interval=refresh_interval_ms,
-            key="auto_refresh_counter",
-        )
+        try:
+            refresh_count = st_autorefresh(
+                interval=refresh_interval_ms,
+                key="auto_refresh_counter",
+            )
 
-        refresh_interval_sec = refresh_interval_ms // 1000
-        last_refresh_time = datetime.now().strftime('%H:%M:%S')
-        countdown_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <style>
-            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            body {{
-                background: transparent;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            }}
-            .countdown-container {{
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.10);
-                border-radius: 12px;
-                padding: 1rem;
-            }}
-            .countdown-header {{
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
-            }}
-            .countdown-header .icon {{ font-size: 1.3rem; }}
-            .countdown-header .label {{
-                color: #E0E0E0;
-                font-weight: 600;
-                font-size: 0.95rem;
-            }}
-            .countdown-time {{
-                font-size: 1.8rem;
-                font-weight: 700;
-                text-align: center;
-                padding: 0.3rem 0;
-                font-family: 'Courier New', monospace;
-                background: linear-gradient(135deg, #60a5fa, #a78bfa);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }}
-            .progress-track {{
-                background: rgba(255,255,255,0.08);
-                border-radius: 8px;
-                height: 8px;
-                margin: 8px 0;
-                overflow: hidden;
-            }}
-            .progress-fill {{
-                height: 100%;
-                border-radius: 8px;
-                background: linear-gradient(90deg, #60a5fa, #a78bfa);
-                width: 100%;
-                transition: width 1s linear;
-            }}
-            .countdown-footer {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 6px;
-            }}
-            .countdown-footer span {{
-                color: #9E9E9E;
-                font-size: 0.78rem;
-            }}
-            .countdown-footer strong {{ color: #BDBDBD; }}
-            .countdown-footer code {{
-                color: #BDBDBD;
-                background: none;
-                font-family: 'Courier New', monospace;
-            }}
-        </style>
-        </head>
-        <body>
-            <div class="countdown-container">
-                <div class="countdown-header">
-                    <span class="icon">⏳</span>
-                    <span class="label">Refresh berikutnya dalam</span>
-                </div>
-                <div class="countdown-time" id="countdown-time">00:00:00</div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="countdown-bar"></div>
-                </div>
-                <div class="countdown-footer">
-                    <span>🔁 Refresh ke-<strong>{refresh_count}</strong></span>
-                    <span>🕑 <code>{last_refresh_time}</code></span>
-                </div>
-            </div>
-
-            <script>
-            (function() {{
-                const totalSeconds = {refresh_interval_sec};
-                const startTime = Date.now();
-
-                function pad(n) {{ return String(n).padStart(2, '0'); }}
-
-                function update() {{
-                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                    let remaining = totalSeconds - elapsed;
-                    if (remaining < 0) remaining = 0;
-
-                    const h = Math.floor(remaining / 3600);
-                    const m = Math.floor((remaining % 3600) / 60);
-                    const s = remaining % 60;
-
-                    document.getElementById('countdown-time').textContent =
-                        pad(h) + ':' + pad(m) + ':' + pad(s);
-                    document.getElementById('countdown-bar').style.width =
-                        ((remaining / totalSeconds) * 100) + '%';
-
-                    if (remaining > 0) {{
-                        setTimeout(update, 1000);
-                    }}
+            refresh_interval_sec = refresh_interval_ms // 1000
+            last_refresh_time = datetime.now().strftime('%H:%M:%S')
+            countdown_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{
+                    background: transparent;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }}
-                update();
-            }})();
-            </script>
-        </body>
-        </html>
-        """
-        components.html(countdown_html, height=150)
+                .countdown-container {{
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.10);
+                    border-radius: 12px;
+                    padding: 1rem;
+                }}
+                .countdown-header {{
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                }}
+                .countdown-header .icon {{ font-size: 1.3rem; }}
+                .countdown-header .label {{
+                    color: #E0E0E0;
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                }}
+                .countdown-time {{
+                    font-size: 1.8rem;
+                    font-weight: 700;
+                    text-align: center;
+                    padding: 0.3rem 0;
+                    font-family: 'Courier New', monospace;
+                    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }}
+                .progress-track {{
+                    background: rgba(255,255,255,0.08);
+                    border-radius: 8px;
+                    height: 8px;
+                    margin: 8px 0;
+                    overflow: hidden;
+                }}
+                .progress-fill {{
+                    height: 100%;
+                    border-radius: 8px;
+                    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+                    width: 100%;
+                    transition: width 1s linear;
+                }}
+                .countdown-footer {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 6px;
+                }}
+                .countdown-footer span {{
+                    color: #9E9E9E;
+                    font-size: 0.78rem;
+                }}
+                .countdown-footer strong {{ color: #BDBDBD; }}
+                .countdown-footer code {{
+                    color: #BDBDBD;
+                    background: none;
+                    font-family: 'Courier New', monospace;
+                }}
+            </style>
+            </head>
+            <body>
+                <div class="countdown-container">
+                    <div class="countdown-header">
+                        <span class="icon">⏳</span>
+                        <span class="label">Refresh berikutnya dalam</span>
+                    </div>
+                    <div class="countdown-time" id="countdown-time">00:00:00</div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="countdown-bar"></div>
+                    </div>
+                    <div class="countdown-footer">
+                        <span>🔁 Refresh ke-<strong>{refresh_count}</strong></span>
+                        <span>🕑 <code>{last_refresh_time}</code></span>
+                    </div>
+                </div>
+
+                <script>
+                (function() {{
+                    const totalSeconds = {refresh_interval_sec};
+                    const startTime = Date.now();
+
+                    function pad(n) {{ return String(n).padStart(2, '0'); }}
+
+                    function update() {{
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        let remaining = totalSeconds - elapsed;
+                        if (remaining < 0) remaining = 0;
+
+                        const h = Math.floor(remaining / 3600);
+                        const m = Math.floor((remaining % 3600) / 60);
+                        const s = remaining % 60;
+
+                        document.getElementById('countdown-time').textContent =
+                            pad(h) + ':' + pad(m) + ':' + pad(s);
+                        document.getElementById('countdown-bar').style.width =
+                            ((remaining / totalSeconds) * 100) + '%';
+
+                        if (remaining > 0) {{
+                            setTimeout(update, 1000);
+                        }}
+                    }}
+                    update();
+                }})();
+                </script>
+            </body>
+            </html>
+            """
+            components.html(countdown_html, height=150)
+            status = "berhasil"
+        except Exception as e:
+            print(f"Error logging auto refresh: ", e)
+            status = "gagal"
+
+        export_logging_df(output_logging, status)
+
     else:
         st.info("💤 Auto refresh **nonaktif**")
 
@@ -422,7 +433,7 @@ def render_task_scheduler_tutorial(header):
                 📌 Prasyarat
             </p>
             <ul style="margin-top:0; padding-left:1.2rem;">
-                <li>Python sudah terinstall &amp; terdaftar di <code>PATH</code></li>
+                <li>Python sudah terinstall terutama lauchernya <code>.exe</code></li>
                 <li>Mengetahui lokasi file script <code>.py</code> yang ingin dijadwalkan</li>
             </ul>
             </div>

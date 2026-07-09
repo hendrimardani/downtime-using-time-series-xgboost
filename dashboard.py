@@ -2,10 +2,16 @@ import os
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from utils.data import create_export_dataframe
-from ui import (
+from utils.data import export_predictions_df
+from ui.styles import (
     inject_css,
-    color_status,
+    color_status
+)
+from ui.charts import (
+    create_forecast_chart,
+    create_combined_chart
+)
+from ui.components import (
     render_header,
     render_kpi_row,
     render_section_header,
@@ -17,16 +23,16 @@ from ui import (
     render_download_button,
     render_footer,
     render_alert,
-    render_task_scheduler_tutorial,
-    create_forecast_chart,
-    create_combined_chart
+    render_task_scheduler_tutorial
 )
-from utils import (
+from utils.model import (
     load_model,
-    run_prediction,
+    run_prediction
+)
+from utils.data import (
     FEATURES,
     TARGETS,
-    HORIZON,
+    HORIZON
 )
 from utils.preprocessing import (
     LOWER_TEMP_NORMAL,
@@ -40,12 +46,20 @@ from utils.preprocessing import (
     LOWER_PRESS_DOWNTIME,
     UPPER_TEMP_DOWNTIME,
     UPPER_VIB_DOWNTIME,
-    UPPER_PRESS_DOWNTIME
+    UPPER_PRESS_DOWNTIME,
+    OUTPUT_LOGGING_SCRIPT
 )
 
 output_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 OUTPUT_PREDIKSI_CSV = f'{output_timestamp}.csv'
 OUTPUT_PREDIKSI_JSON = f'{output_timestamp}.json'
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FOLDER_LOGGING = os.path.join(BASE_DIR, "logging")
+OUTPUT_LOGGING_AUTOREFRESH = os.path.join(FOLDER_LOGGING, "autorefresh.csv")
+
+if not os.path.exists(FOLDER_LOGGING):
+    os.makedirs(FOLDER_LOGGING, exist_ok=True)
 
 st.set_page_config(
     page_title="Prediksi Downtime Mesin",
@@ -68,7 +82,7 @@ except Exception as e:
 
 
 with st.sidebar:
-    render_autorefresh("## 🔄 Auto Refresh")
+    render_autorefresh("## 🔄 Auto Refresh", OUTPUT_LOGGING_AUTOREFRESH)
     uploaded_file = render_upload_data("## 📂 Upload Data CSV")
     render_task_scheduler_tutorial("## 📅 Automasi Script")
 
@@ -251,13 +265,33 @@ if data_available:
 
     # ── Download ────────────────────────────────────────────
     render_section_header("💾 Unduh Hasil Prediksi")
-    df_export = create_export_dataframe(all_results)
+    df_export = export_predictions_df(all_results)
     dl1, dl2, _ = st.columns([1, 1, 2])
 
     with dl1:
         render_download_button(df_export, "csv",  OUTPUT_PREDIKSI_CSV)
     with dl2:
         render_download_button(df_export, "json",  OUTPUT_PREDIKSI_JSON)
+
+    st.markdown("---")
+
+    render_section_header("📝 Informasi Logging")
+    df_log_autorefresh = pd.read_csv(OUTPUT_LOGGING_AUTOREFRESH)
+    df_log_script = pd.read_csv(OUTPUT_LOGGING_SCRIPT)
+    df_log_autorefresh_styled = df_log_autorefresh.style.map(
+        lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
+    , subset=["Status"]
+    )
+    df_log_script_styled = df_log_script.style.map(
+        lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
+    , subset=["Status"]
+    )
+
+    with st.expander("👁️Lihat Logging Auotrefresh", expanded=False):
+        st.dataframe(df_log_autorefresh_styled, use_container_width=True, height=300)
+
+    with st.expander("👁️Lihat Logging Script di Background", expanded=False):
+        st.dataframe(df_log_script_styled, use_container_width=True, height=300)
 
 else:
     render_welcome_page()
