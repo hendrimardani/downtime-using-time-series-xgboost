@@ -33,8 +33,8 @@ Proyek ini adalah sebuah aplikasi web interaktif yang dibangun menggunakan frame
 
 | Fitur | Deskripsi |
 |:---|:---|
-| 🔮 **Prediksi 24-Step** | Memprediksi 3 parameter sensor (Suhu, Getaran, Tekanan) secara bersamaan untuk 24 langkah (jam) ke depan |
-| 🚦 **Deteksi Status Risiko** | Mengklasifikasikan tiap prediksi ke dalam status 🟢 Aman, 🟡 Waspada, atau 🔴 Bahaya secara otomatis |
+| 🔮 **Prediksi 24-Step** | Memprediksi 3 parameter sensor (suhu, getaran, tekanan) secara bersamaan untuk 24 langkah (jam) ke depan |
+| 🚦 **Deteksi Status Risiko** | Mengklasifikasikan tiap prediksi ke dalam status 🟢 aman, 🟡 waspada, atau 🔴 bahaya secara otomatis |
 | 📊 **Visualisasi Interaktif** | Grafik detail 24-step dan grafik overlay semua fitur menggunakan Plotly |
 | 🔄 **Auto Refresh** | Halaman dapat diatur agar otomatis menyegarkan data setiap 1 menit, 1 jam, atau 1 hari |
 | ⏱️ **Countdown Timer** | Menampilkan waktu mundur dan progress bar hingga refresh berikutnya |
