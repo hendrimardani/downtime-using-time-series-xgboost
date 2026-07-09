@@ -361,7 +361,7 @@ def render_upload_data(header):
     uploaded_file = st.file_uploader(
         "Pilih file CSV",
         type=["csv"],
-        help="File CSV dengan kolom lag-1 dan lag-24 untuk temperature, vibration, dan pressure_bar",
+        help="File CSV dengan kolom day_of_week, is_holiday, lag-1 dan lag-24 untuk temperature, vibration, dan pressure_bar",
     )
     st.markdown("---")
     st.markdown("## 📝 Input Data")

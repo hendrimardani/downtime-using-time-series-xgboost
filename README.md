@@ -1,12 +1,6 @@
-# ⚙️ Dashboard Prediksi Downtime Mesin
-
-Dashboard interaktif berbasis web menggunakan **Streamlit** untuk memprediksi kondisi sensor mesin industri (suhu, getaran, dan tekanan) hingga **24 langkah (jam) ke depan** menggunakan model Machine Learning **XGBoost RegressorChain**.
-
----
-
 ## 📋 Daftar Isi
 
-- [Gambaran Umum](#gambaran-umum)
+- [Deskripsi Proyek](#deskripsi-proyek)
 - [Fitur Utama](#fitur-utama)
 - [Informasi Dataset (Dataset Mentah)](#informasi-dataset-dataset-mentah)
 - [Input (Masukan)](#input-masukan)
@@ -20,9 +14,18 @@ Dashboard interaktif berbasis web menggunakan **Streamlit** untuk memprediksi ko
 
 ---
 
-## Gambaran Umum
+## Deskripsi Proyek
 
-Proyek ini merupakan tugas akhir yang membangun sebuah sistem prediksi *downtime* mesin berbasis *time series*. Sistem membaca data sensor historis, lalu menggunakan model XGBoost yang telah dilatih untuk memperkirakan nilai sensor 24 jam ke depan dan mengklasifikasikannya ke dalam tiga kategori risiko: **Aman**, **Waspada**, atau **Bahaya**.
+Mengembangkan sistem predictive maintenance end-to-end yang menggabungkan machine learning dan data visualization untuk memprediksi potensi **downtime** mesin industri. Sistem membaca data sensor historis, lalu menggunakan model XGBoost yang telah dilatih untuk memperkirakan nilai sensor 24 jam ke depan dan mengklasifikasikannya ke dalam tiga kategori risiko: **aman**, **waspada**, dan **bahaya**. Dashboard interaktif dibangun menggunakan Streamlit dengan fitur:
+
+- Prediksi multi-step 24 jam untuk 3 parameter sensor secara simultan
+- Klasifikasi risiko otomatis (Aman / Waspada / Bahaya) berdasarkan ambang batas statistik dari data historis
+- Visualisasi interaktif menggunakan Plotly (grafik forecast detail & overlay)
+- Batch prediction dengan dukungan upload CSV & ekspor hasil (CSV/JSON)
+- Auto-refresh & logging untuk monitoring real-time
+- UI modern dengan dark-mode & glassmorphism styling
+
+**Tech Stack**: Python, Streamlit, XGBoost, Scikit-learn (RegressorChain), Pandas, Plotly, Joblib
 
 ---
 
@@ -294,3 +297,5 @@ Downtime using Time Series XGBoost-RegressionChain/
     ├── model.py                       # Load model & run_prediction()
     └── preprocessing.py               # Ambang batas & status_downtime()
 ```
+
+**Tautan Demo:** [Demo](https://bit.ly/demo_downtime_using_xgboost_regression_chain)

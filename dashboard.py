@@ -160,7 +160,7 @@ if data_available:
     render_section_header("🟢 Kategori Aman Ambang Batas Statistik")
     s1, s2, s3 = st.columns(3)
     with s1:
-        render_kpi_statistics("normal", "🔼🌡️ Batas Atas (Temperature C)", UPPER_PRESS_NORMAL)
+        render_kpi_statistics("normal", "🔼🌡️ Batas Atas (Temperature C)", UPPER_TEMP_NORMAL)
     with s2:
         render_kpi_statistics("normal", "🔼📳 Batas Atas (Vibration mm/s)", UPPER_VIB_NORMAL)
     with s3:
@@ -257,7 +257,7 @@ if data_available:
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-label">✅ Tingkat Aman</div>
-            <div class="kpi-value">{sum_aman:.1f}%</div>
+            <div class="kpi-value">{sum_aman / n_rows * 100}%</div>
             <div class="kpi-unit">data dalam batas aman</div>
         </div>
         """, unsafe_allow_html=True)
