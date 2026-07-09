@@ -59,6 +59,7 @@ FOLDER_LOGGING = os.path.join(BASE_DIR, "logging")
 OUTPUT_LOGGING_AUTOREFRESH = os.path.join(FOLDER_LOGGING, "autorefresh.csv")
 
 if not os.path.exists(FOLDER_LOGGING):
+    print("ADA BERKAS")
     os.makedirs(FOLDER_LOGGING, exist_ok=True)
 
 st.set_page_config(
@@ -276,22 +277,28 @@ if data_available:
     st.markdown("---")
 
     render_section_header("📝 Informasi Logging")
-    df_log_autorefresh = pd.read_csv(OUTPUT_LOGGING_AUTOREFRESH)
-    df_log_script = pd.read_csv(OUTPUT_LOGGING_SCRIPT)
-    df_log_autorefresh_styled = df_log_autorefresh.style.map(
-        lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
-    , subset=["Status"]
-    )
-    df_log_script_styled = df_log_script.style.map(
-        lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
-    , subset=["Status"]
-    )
+    is_log_available = False
+    try:
+        df_log_autorefresh = pd.read_csv(OUTPUT_LOGGING_AUTOREFRESH)
+        df_log_script = pd.read_csv(OUTPUT_LOGGING_SCRIPT)
+        df_log_autorefresh_styled = df_log_autorefresh.style.map(
+            lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
+        , subset=["Status"]
+        )
+        df_log_script_styled = df_log_script.style.map(
+            lambda x: "color: #00d48a; font-weight: bold;"if x == "berhasil" else "color: #ff4b4b; font-weight: bold;"
+        , subset=["Status"]
+        )
+        is_log_available = True
+    except Exception as e:
+        st.write("Jika ingin menampilkan logging harap jalankan terlebih dahulu interval refresh 1 menit, 1 jam, atau 1 hari")
+    
+    if is_log_available:
+        with st.expander("👁️Lihat Logging Autorefresh", expanded=False):
+            st.dataframe(df_log_autorefresh_styled, use_container_width=True, height=300)
 
-    with st.expander("👁️Lihat Logging Auotrefresh", expanded=False):
-        st.dataframe(df_log_autorefresh_styled, use_container_width=True, height=300)
-
-    with st.expander("👁️Lihat Logging Script di Background", expanded=False):
-        st.dataframe(df_log_script_styled, use_container_width=True, height=300)
+        with st.expander("👁️Lihat Logging Script di Background", expanded=False):
+            st.dataframe(df_log_script_styled, use_container_width=True, height=300)
 
 else:
     render_welcome_page()

@@ -17,6 +17,7 @@ FOLDER_LOGGING = os.path.join(BASE_DIR, "logging")
 OUTPUT_LOGGING_SCRIPT = os.path.join(FOLDER_LOGGING, "preprocessing_script.csv")
 
 if not os.path.exists(FOLDER_LOGGING):
+    print("OUTPUT_LOGGING_SCRIPT", OUTPUT_LOGGING_SCRIPT)
     os.makedirs(FOLDER_LOGGING, exist_ok=True)
 
 # Normal

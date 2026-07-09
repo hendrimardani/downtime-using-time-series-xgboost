@@ -343,7 +343,7 @@ def render_autorefresh(header, output_logging):
         except Exception as e:
             print(f"Error logging auto refresh: ", e)
             status = "gagal"
-
+        
         export_logging_df(output_logging, status)
 
     else:
