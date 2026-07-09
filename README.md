@@ -16,7 +16,7 @@
 
 ## Deskripsi Proyek
 
-Produk ini adalah sebuah aplikasi web interaktif yang dibangun menggunakan framework streamlit dirancang untuk membantu operator dan teknisi dalam memantau dan memprediksi kondisi mesin industri secara proaktif. Sistem menerima data historis sensor mesin sebagai input, kemudian menggunakan model machine learning yang telah dilatih untuk memperkirakan kondisi mesin 24 jam ke depan dan  mengklasifikasikannya ke dalam tiga status kategori risiko: **aman**, **waspada**, dan **bahaya**. Dashboard interaktif dibangun menggunakan Streamlit dengan fitur:
+Proyek ini adalah sebuah aplikasi web interaktif yang dibangun menggunakan framework streamlit dirancang untuk membantu operator dan teknisi dalam memantau dan memprediksi kondisi mesin industri secara proaktif. Sistem menerima data historis sensor mesin sebagai input, kemudian menggunakan model machine learning yang telah dilatih untuk memperkirakan kondisi mesin 24 jam ke depan dan  mengklasifikasikannya ke dalam tiga status kategori risiko: **aman**, **waspada**, dan **bahaya**. Dashboard interaktif dibangun menggunakan Streamlit dengan fitur:
 
 - Prediksi multi-step 24 jam untuk 3 parameter sensor secara simultan
 - Klasifikasi risiko otomatis (Aman / Waspada / Bahaya) berdasarkan ambang batas statistik dari data historis
